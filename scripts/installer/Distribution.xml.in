@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<installer-gui-script minSpecVersion="2">
+  <title>ezNTFS</title>
+  <options customize="never" require-scripts="true" hostArchitectures="@ARCHITECTURE@"/>
+  <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+  <welcome file="Welcome.html" mime-type="text/html"/>
+  <installation-check script="checkDriverUsage()"/>
+  <script><![CDATA[
+function isExternal(entry) {
+    var connection = entry["Protocol Characteristics"] || {};
+    if (connection["Physical Interconnect Location"] === "External") {
+        return true;
+    }
+    var parents = system.ioregistry.parentsOf(entry) || [];
+    return Array.prototype.some.call(parents, isExternal);
+}
+
+function checkDriverUsage() {
+    if (!system.files.fileExistsAtPath("/Library/Application Support/ezNTFS/Driver/installed.plist")) {
+        return true;
+    }
+
+    var media = system.ioregistry.matchingClass("IOMedia") || [];
+    var inUse = Array.prototype.some.call(media, function (entry) {
+        // A partition scheme can hold the whole disk open with no volumes in use.
+        return entry["BSD Name"] && entry["Open"] &&
+            (!entry["Whole"] || entry["Leaf"]) && isExternal(entry);
+    });
+    if (!inUse) {
+        return true;
+    }
+
+    my.result.type = "Fatal";
+    my.result.title = system.localizedString("externalDisks.title");
+    my.result.message = system.localizedString("externalDisks.message");
+    system.log("ezNTFS: " + my.result.message);
+    return false;
+}
+  ]]></script>
+  <choices-outline>
+    <line choice="ezntfs"/>
+  </choices-outline>
+  <choice id="ezntfs" title="ezNTFS" visible="false">
+    <pkg-ref id="@IDENTIFIER@"/>
+  </choice>
+  <pkg-ref id="@IDENTIFIER@" version="@VERSION@">@COMPONENT@</pkg-ref>
+</installer-gui-script>

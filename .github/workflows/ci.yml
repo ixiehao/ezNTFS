@@ -1,0 +1,23 @@
+name: macOS build and tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  swift:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show toolchain
+        run: swift --version
+      - name: Validate localization
+        run: python3 scripts/check-localizations.py
+      - name: Test (NTFS image integration requires macFUSE and runs separately)
+        run: swift test
+      - name: Build release
+        run: swift build -c release

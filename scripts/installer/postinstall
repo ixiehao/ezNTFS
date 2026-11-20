@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+. "$(dirname "$0")/settings"
+[ "$3" = "/" ]
+driver="$support/Driver/$driver_build"
+receipt="$support/Driver/.next.plist"
+service=local.ezntfs.mount
+job="/Library/LaunchDaemons/$service.plist"
+
+# The previous driver selection remains in place until the complete replacement passes verification.
+[ -f "$driver/bin/ntfs-3g" ] && [ -f "$support/.pending-fuse" ]
+/bin/mkdir -p "$driver/lib"
+/bin/mv -f "$support/.pending-fuse" "$driver/lib/libfuse.2.dylib"
+[ "$(/usr/bin/shasum -a 256 "$driver/bin/ntfs-3g" | /usr/bin/cut -d ' ' -f 1)" = "$driver_hash" ]
+[ "$(/usr/bin/shasum -a 256 "$driver/lib/libfuse.2.dylib" | /usr/bin/cut -d ' ' -f 1)" = "$EZNTFS_FUSE_HASH" ]
+"$driver/bin/ntfs-3g" --version
+/usr/bin/install -o root -g wheel -m 644 "$driver/candidate.plist" "$receipt"
+
+if [ "$install_service" = yes ]; then
+    if /bin/launchctl print "system/$service" >/dev/null 2>&1; then
+        /bin/launchctl bootout "system/$service"
+    fi
+    if ! /bin/launchctl bootstrap system "$job"; then
+        # Preserve a deliberate macOS background-item disablement.
+        /bin/launchctl print-disabled system | /usr/bin/grep -Eq '"local\.ezntfs\.mount"[[:space:]]*=>[[:space:]]*(disabled|true)' || exit 1
+    fi
+fi
+/bin/mv -f "$receipt" "$support/Driver/installed.plist"
+/bin/rm -f "$support/.installing"

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>local.ezntfs.mount</string>
+  <key>AssociatedBundleIdentifiers</key><array><string>local.ezntfs.app</string></array>
+  <key>ProgramArguments</key>
+  <array><string>/Library/Application Support/ezNTFS/Service.app/Contents/MacOS/ezntfs-service</string></array>
+  <key>MachServices</key>
+  <dict><key>local.ezntfs.mount</key><true/></dict>
+  <key>AbandonProcessGroup</key><true/>
+  <key>WorkingDirectory</key><string>/var/root</string>
+</dict>
+</plist>

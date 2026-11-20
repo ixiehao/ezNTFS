@@ -1,0 +1,60 @@
+#!/bin/sh
+set -eu
+
+. "$(dirname "$0")/settings"
+[ "$3" = "/" ] || { echo "请选择当前启动盘。" >&2; exit 1; }
+fuse=/Library/Filesystems/macfuse.fs
+service_signer='anchor apple generic and certificate leaf[subject.OU] = "3T5GSNBU6W"'
+version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$fuse/Contents/Info.plist") || exit 1
+if [ "$version" != "$fuse_version" ] || ! /usr/bin/codesign --verify --strict --arch "$architecture" -R="$service_signer"     "$fuse/Contents/Resources/mount_macfuse" ||
+   ! /usr/bin/codesign --verify --strict --arch "$architecture" -R="$service_signer"     "$fuse/Contents/Frameworks/MFMount.framework/Versions/A/MFMount"; then
+    echo "请先运行 macFUSE $fuse_version 官方安装器。" >&2
+    exit 1
+fi
+
+/usr/bin/perl - "$support" "$(dirname "$0")/check-driver-usage" <<'PERL'
+use strict;
+use warnings;
+use Fcntl qw(:mode :flock O_RDONLY O_WRONLY O_CREAT O_NOFOLLOW O_NONBLOCK);
+use File::Temp qw(tempfile);
+use Digest::SHA qw(sha256_hex);
+
+my ($root, $usageChecker) = @ARGV;
+for my $dir ("/Library", "/Library/Application Support", $root) {
+    if (!-e $dir && $dir eq $root) {
+        mkdir($dir, 0755) or die "Cannot create ezNTFS support directory: $!";
+    }
+    my @st = lstat $dir;
+    die "Unsafe ezNTFS support directory: $dir" if !@st || !S_ISDIR($st[2]) || $st[4] != 0 || $st[2] & 0022;
+    open(my $listing, "-|", "/bin/ls", "-lde", $dir) or die "Cannot check directory ACL: $!";
+    my @lines = <$listing>;
+    close($listing) or die "Cannot inspect directory permissions";
+    die "Unexpected ACL: $dir" if @lines != 1;
+}
+sysopen(my $lock, "$root/service.lock", O_WRONLY | O_CREAT | O_NOFOLLOW, 0644) or die "Cannot open ezNTFS lock: $!";
+my @st = stat $lock;
+die "Unsafe ezNTFS installation lock" if !@st || !S_ISREG($st[2]) || $st[4] != 0 || $st[2] & 0022;
+flock($lock, LOCK_EX | LOCK_NB) or die "ezNTFS 正在挂载。请先安全弹出所有移动硬盘，然后重新运行安装包。\n";
+if (-e "$root/Driver/installed.plist" || -e "$root/service.plist") {
+    # This package only replaces ezNTFS files. Other macFUSE drivers may keep their mounts.
+    my $usage = system($usageChecker, "$root/Driver");
+    die "移动硬盘正在使用。请先安全弹出所有移动硬盘，然后重新运行安装包。\n" if $usage == (1 << 8);
+    die "无法确认 ezNTFS 驱动是否正在使用，请稍后重试。\n" if $usage != 0;
+}
+# Verify the exact bytes from the local macFUSE install before disabling new mounts.
+sysopen(my $source, "/usr/local/lib/libfuse.2.dylib", O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+    or die "无法读取 macFUSE 动态库，请运行官方安装器。\n";
+my @info = stat $source;
+die "Invalid macFUSE library" if !@info || !S_ISREG($info[2]) || $info[7] < 1 || $info[7] > 5_000_000;
+my $data = "";
+my $count = read($source, $data, $info[7]+1);
+die "macFUSE 动态库校验失败，请运行官方安装器。\n" if !defined $count || $count != $info[7] ||
+    sha256_hex($data) ne $ENV{EZNTFS_FUSE_HASH};
+my ($out, $path) = tempfile(".vendor.XXXXXXXX", DIR => $root, UNLINK => 0);
+print {$out} $data or die "Cannot stage macFUSE library: $!";
+close($out) or die "Cannot stage macFUSE library: $!";
+chmod(0644, $path) == 1 or die "Cannot set library permissions: $!";
+rename($path, "$root/.pending-fuse") or die "Cannot stage macFUSE library: $!";
+sysopen(my $marker, "$root/.installing", O_WRONLY | O_CREAT | O_NOFOLLOW, 0600)
+    or die "Cannot start ezNTFS installation: $!";
+PERL

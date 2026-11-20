@@ -1,0 +1,2 @@
+"externalDisks.title" = "External disks are in use";
+"externalDisks.message" = "Close any files on external disks, safely eject all external disks in Finder or ezNTFS, then reopen this installer.";
