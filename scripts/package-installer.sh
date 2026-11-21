@@ -9,7 +9,12 @@ archive="${1:A}"
 cd -- "${0:A:h:h}"
 project="$(pwd -P)"
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-architecture="$(/usr/bin/uname -m)"
+architecture="${EZNTFS_ARCHITECTURE:-$(/usr/bin/uname -m)}"
+[[ "$architecture" == arm64 || "$architecture" == x86_64 ]] || {
+  print -u2 -- "Unsupported ezNTFS architecture: $architecture"
+  exit 2
+}
+export EZNTFS_ARCHITECTURE="$architecture"
 name="ezNTFS-$version-$architecture"
 output="$project/dist/$name"
 destination="$output/$name.pkg"
@@ -33,6 +38,11 @@ if [[ -n "${EZNTFS_PREBUILT_DRIVER:-}" ]]; then
 else
   scripts/build-driver.sh "$archive" "$driver"
 fi
+[[ "$(/usr/bin/lipo -archs "$driver/bin/ntfs-3g")" == "$architecture" ]] || {
+  print -u2 -- "NTFS-3G does not match the package architecture: $architecture"
+  exit 1
+}
+/usr/bin/codesign --verify --strict --arch "$architecture" "$driver/bin/ntfs-3g"
 build="$(/usr/libexec/PlistBuddy -c 'Print :build' "$driver/candidate.plist")"
 fuse="$(/usr/libexec/PlistBuddy -c 'Print :macFUSEVersion' "$driver/candidate.plist")"
 [[ "$fuse" =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]]
@@ -57,11 +67,13 @@ exit(DriverUsage.inspect(under: CommandLine.arguments[1]).rawValue)
 SWIFT
 /usr/bin/swiftc -O -target "$architecture-apple-macosx14.0" -module-cache-path "$stage/module-cache" \
   Sources/EzNTFSCore/DriverUsage.swift "$stage/usage/main.swift" -o "$stage/scripts/check-driver-usage"
+sign_options=()
 if [[ "$identity" != - ]]; then
-  /usr/bin/codesign --force --sign "$identity" --options runtime --timestamp \
-    --identifier local.ezntfs.driver-usage "$stage/scripts/check-driver-usage"
-  /usr/bin/codesign --verify --strict "$stage/scripts/check-driver-usage"
+  sign_options=(--options runtime --timestamp)
 fi
+/usr/bin/codesign --force --sign "$identity" "${sign_options[@]}" \
+  --identifier local.ezntfs.driver-usage "$stage/scripts/check-driver-usage"
+/usr/bin/codesign --verify --strict "$stage/scripts/check-driver-usage"
 settings="$stage/scripts/settings"
 cat > "$settings" <<SETTINGS
 support='$support'
@@ -94,10 +106,11 @@ EZNTFS_DRIVER_REPAIR_PKG="$stage/ezNTFS-Driver.pkg" scripts/build-app.sh
 
 mkdir -p "$payload/Applications" "$payload/Library/LaunchDaemons" "$payload$support/Service.app/Contents/MacOS"
 /usr/bin/ditto "$output/ezNTFS.app" "$payload/Applications/ezNTFS.app"
-build_root="${EZNTFS_BUILD_ROOT:-$project/.build}"
+build_root="${EZNTFS_BUILD_ROOT:-$project/.build/package-$architecture}"
 export CLANG_MODULE_CACHE_PATH="$build_root/module-cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$build_root/module-cache"
-swift_options=(--scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
+swift_options=(--triple "$architecture-apple-macosx14.0"
+               --scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
                --config-path "$build_root/swiftpm-config" --security-path "$build_root/swiftpm-security")
 if [[ "${EZNTFS_SWIFTPM_DISABLE_SANDBOX:-0}" == 1 ]]; then
   swift_options+=(--disable-sandbox)
@@ -118,12 +131,9 @@ if [[ "${EZNTFS_REUSE_INSTALLED_SERVICE:-0}" == 1 ]]; then
 else
   /usr/bin/install -m 644 Resources/ServiceInfo.plist "$service/Contents/Info.plist"
   /usr/bin/install -m 755 "$binaries/ezntfs-service" "$service/Contents/MacOS/ezntfs-service"
-  code_options=()
-  if [[ "$identity" != "-" ]]; then
-    code_options=(--options runtime --timestamp)
-  fi
-  /usr/bin/codesign --force --sign "$identity" "${code_options[@]}" "$service"
+  /usr/bin/codesign --force --sign "$identity" "${sign_options[@]}" "$service"
 fi
+[[ "$(/usr/bin/lipo -archs "$service/Contents/MacOS/ezntfs-service")" == "$architecture" ]]
 /usr/bin/codesign --verify --strict "$service"
 
 requirement() {

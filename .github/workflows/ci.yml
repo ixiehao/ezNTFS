@@ -9,7 +9,10 @@ permissions:
 
 jobs:
   swift:
-    runs-on: macos-15
+    strategy:
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     env:
       # The runner's default Swift 6.1 compiler crashes during SwiftUI code generation.

@@ -16,6 +16,14 @@ scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
 
 PKG 安装主 App、按需启动的系统服务和版本化驱动。安装器会从本机官方 macFUSE 安装中校验并复制必要的动态库到系统目录。输出写入 `dist/ezNTFS-<版本>-<架构>/`，脚本拒绝覆盖已存在的正式产物。仅构建应用用于调试时可用 `scripts/build-app.sh`。原有拖放式 DMG 脚本用于界面预览，完整部署从 PKG 入口安装。
 
+PKG 默认按当前架构构建。可以为 App、系统服务、安装辅助程序和 NTFS-3G 指定同一个目标架构。下例构建 Intel 原生包，要求构建机已安装官方 macFUSE 5.5.0，并能运行 Intel 命令行程序。在 Apple 芯片 Mac 上，这项构建验证使用 Rosetta。Intel Mac 使用 Xcode 26.3 等同时支持 Swift 6 和 Intel 的工具链。
+
+```zsh
+EZNTFS_ARCHITECTURE=x86_64 scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
+```
+
+两个架构使用独立的默认构建缓存。安装器在写入系统目录前检查架构，Intel 包仅安装到 Intel Mac，最低版本为 macOS 14。交叉编译和 Rosetta 测试之外，Intel 版正式发布前还需在 Intel 实机验证挂载服务、NTFS 读写和安全弹出。
+
 ## 本地化
 
 0.5.1 起，安装与驱动修复包在打开时检查 macFUSE。需要的版本来自随包驱动清单。已有兼容版本时可以继续。缺装时显示对应的官方发布地址，版本不符和安装不完整各有提示。真正写入系统目录前，安装器还会复核签名和动态库摘要。运行 `node --test scripts/check-installer.mjs` 检查三语提示和各分支。
