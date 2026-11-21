@@ -79,21 +79,65 @@ verify_image() {
             FUSE_LIBS=/usr/local/lib/libfuse.2.dylib \
             ./configure --with-fuse=external --enable-static --disable-shared --disable-nls --disable-plugins &&
         /usr/bin/make -j 4 -C libntfs-3g &&
-        /usr/bin/make -j 4 -C ntfsprogs mkntfs
+        /usr/bin/make -j 4 -C ntfsprogs mkntfs ntfscp ntfscat
     ) > "$work/mkntfs-build.log" 2>&1 || { tail -70 "$work/mkntfs-build.log"; return 1; }
     truncate -s 768m "$fixture"
     "$work/ntfs-3g-2026.9.28/ntfsprogs/mkntfs" -F -Q -s 512 -L EZNTFS-INTEL-QA "$fixture"
     shasum -a 256 "$fixture" > "$work/fixture.sha256"
+    verify_raw_image "$fixture"
     local result=0
     "$cli" verify-image "$fixture" || result=$?
     shasum -a 256 -c "$work/fixture.sha256"
     if [[ "$result" != 0 ]]; then
         /usr/bin/kmutil showloaded 2>&1 | grep -i 'macfuse\|error' || true
         /usr/bin/log show --last 3m --style compact --predicate '(process == "kernelmanagerd" OR process == "mount_macfuse") AND (eventMessage CONTAINS[c] "macfuse" OR eventMessage CONTAINS[c] "approval")' | tail -50
+        probe_fskit "$fixture"
         return "$result"
     fi
     EZNTFS_TEST_IMAGE="$fixture" swift test
     shasum -a 256 -c "$work/fixture.sha256"
+}
+
+verify_raw_image() {
+    local fixture="$1"
+    local raw_image="$work/raw-image.img"
+    local programs="$work/ntfs-3g-2026.9.28/ntfsprogs"
+    local input="$work/payload" output="$work/readback" index
+    cp -c "$fixture" "$raw_image"
+    dd if=/dev/urandom of="$input" bs=1m count=64
+    "$programs/ntfscp" -f "$raw_image" "$input" /large.bin
+    "$programs/ntfscat" -f "$raw_image" /large.bin > "$output"
+    cmp "$input" "$output"
+    for ((index=0; index<64; index++)); do
+        printf 'ezNTFS verification file %s\n' "$index" > "$input"
+        "$programs/ntfscp" -f "$raw_image" "$input" "/small-$index.txt"
+    done
+    for ((index=0; index<64; index++)); do
+        printf 'ezNTFS verification file %s\n' "$index" > "$input"
+        "$programs/ntfscat" -f "$raw_image" "/small-$index.txt" > "$output"
+        cmp "$input" "$output"
+    done
+    shasum -a 256 -c "$work/fixture.sha256"
+    echo "Native NTFS-3G image read/write verified: 1 x 64 MiB and 64 small files."
+}
+
+probe_fskit() {
+    local fixture="$1" driver_build installed_driver
+    local probe_image="$work/fskit-image.img" probe_mount="$work/fskit-mount"
+    driver_build=$(/usr/libexec/PlistBuddy -c 'Print build' "$support/Driver/installed.plist")
+    installed_driver="$support/Driver/$driver_build/bin/ntfs-3g"
+    cp -c "$fixture" "$probe_image"
+    mkdir "$probe_mount"
+    if /usr/bin/perl -e 'alarm shift; exec @ARGV' 30 "$installed_driver" -o backend=fskit,local "$probe_image" "$probe_mount" &&
+        /sbin/mount | grep -F " on $probe_mount ("; then
+        printf 'macFUSE FSKit supplemental probe\n' > "$work/fskit-expected"
+        if cp "$work/fskit-expected" "$probe_mount/probe.txt" && cmp "$work/fskit-expected" "$probe_mount/probe.txt"; then
+            echo "Supplemental FSKit read/write probe succeeded."
+        fi
+        /sbin/umount "$probe_mount" || true
+    else
+        echo "Supplemental FSKit backend unavailable on this runner."
+    fi
 }
 
 case "${1:-}" in
