@@ -1,0 +1,10 @@
+{
+  "name": "ezntfs-website-qa",
+  "private": true,
+  "scripts": {
+    "test": "node tests/layout.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
+}

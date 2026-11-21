@@ -4,11 +4,16 @@
 
 ezNTFS 使用 NTFS-3G 和 macFUSE 在 macOS 上读写外置 NTFS 硬盘，支持逐盘自动挂载、安全弹出和复制后逐文件 SHA-256 校验。
 
+[官方网站](https://ixiehao.github.io/ezNTFS/zh/) · [下载 Mac 版](https://github.com/ixiehao/ezNTFS/releases/latest) · [反馈问题](https://github.com/ixiehao/ezNTFS/issues)
+
 ## 安装要求
 
-- macOS 14 或更新版本。本机试用安装包已在 Apple Silicon 上验证。
+- Apple Silicon Mac，系统为 macOS 14 或更新版本。
 - 通过官方安装器安装 [macFUSE 5.5.0](https://macfuse.github.io/)。
 - 按 macOS 提示授权 ezNTFS PKG 安装主 App、系统挂载服务和 NTFS-3G 驱动。
+- 0.5.0 的 App 与随附可执行文件使用 ad-hoc 签名。PKG 本身未签名，也未公证。SHA-256 校验文件见发布页。
+
+<img src="website/assets/ezntfs-zh-Hans.png" width="660" alt="ezNTFS 显示三块模拟 NTFS 硬盘及其挂载状态">
 
 ## 使用
 

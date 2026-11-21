@@ -1,6 +1,9 @@
 "about.description" = "macOS で外付け NTFS ディスクを読み書き";
 "about.developer" = "開発者";
 "about.license" = "MIT ライセンス";
+"about.website" = "公式サイト";
+"about.source" = "ソースコード";
+"about.feedback" = "問題を報告";
 "about.local" = "ファイルはこの Mac 上で処理されます。";
 "button.choose" = "選択";
 "button.done" = "完了";

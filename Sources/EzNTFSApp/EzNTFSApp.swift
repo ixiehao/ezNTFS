@@ -17,15 +17,31 @@ final class Lifecycle: NSObject, NSApplicationDelegate {
             .foregroundColor: NSColor.secondaryLabelColor,
             .paragraphStyle: paragraph,
         ]
-        var link = body
-        link[.link] = URL(string: "https://github.com/ixiehao")
-        link[.foregroundColor] = NSColor.linkColor
-        link[.underlineStyle] = NSUnderlineStyle.single.rawValue
         let credits = NSMutableAttributedString(string: language.text("about.description") + "\n" +
                                                 language.text("about.developer") + " · ", attributes: body)
-        credits.append(NSAttributedString(string: "ixiehao", attributes: link))
-        credits.append(NSAttributedString(string: "\n\n" + language.text("about.local") + "\n" +
-                                         language.text("about.license"), attributes: body))
+        func appendLink(_ title: String, to url: URL) {
+            var link = body
+            link[.link] = url
+            link[.foregroundColor] = NSColor.linkColor
+            link[.underlineStyle] = NSUnderlineStyle.single.rawValue
+            credits.append(NSAttributedString(string: title, attributes: link))
+        }
+        let site = URL(string: "https://ixiehao.github.io/ezNTFS/")!
+        let website: URL = switch language.locale.identifier {
+        case "zh-Hans": site.appending(path: "zh", directoryHint: .isDirectory)
+        case "ja": site.appending(path: "ja", directoryHint: .isDirectory)
+        default: site
+        }
+        let project = ReleaseCheck.projectPage
+        appendLink("ixiehao", to: project.deletingLastPathComponent())
+        credits.append(NSAttributedString(string: "\n\n" + language.text("about.local") + "\n", attributes: body))
+        appendLink(language.text("about.license"), to: project.appending(path: "blob/main/LICENSE"))
+        credits.append(NSAttributedString(string: "\n\n", attributes: body))
+        appendLink(language.text("about.website"), to: website)
+        credits.append(NSAttributedString(string: "  ·  ", attributes: body))
+        appendLink(language.text("about.source"), to: project)
+        credits.append(NSAttributedString(string: "  ·  ", attributes: body))
+        appendLink(language.text("about.feedback"), to: project.appending(path: "issues"))
         NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
         NSApp.activate(ignoringOtherApps: true)
     }

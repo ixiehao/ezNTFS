@@ -1,6 +1,9 @@
 "about.description" = "Read and write external NTFS disks on macOS";
 "about.developer" = "Developer";
 "about.license" = "MIT License";
+"about.website" = "Website";
+"about.source" = "Source";
+"about.feedback" = "Feedback";
 "about.local" = "Files are processed on this Mac.";
 "button.choose" = "Choose";
 "button.done" = "Done";

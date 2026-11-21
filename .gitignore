@@ -8,3 +8,5 @@ xcuserdata/
 .env.local
 *.p12
 *.pfx
+
+website/node_modules/

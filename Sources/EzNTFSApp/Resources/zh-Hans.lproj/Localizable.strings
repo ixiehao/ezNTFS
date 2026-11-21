@@ -1,6 +1,9 @@
 "about.description" = "macOS 外置 NTFS 磁盘读写工具";
 "about.developer" = "开发者";
 "about.license" = "MIT 许可证";
+"about.website" = "官网";
+"about.source" = "源代码";
+"about.feedback" = "问题反馈";
 "about.local" = "文件在本机处理。";
 "button.choose" = "选择";
 "button.done" = "完成";

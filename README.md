@@ -4,11 +4,16 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 ezNTFS mounts external NTFS disks on macOS for reading and writing. It uses NTFS-3G and macFUSE, and supports per-disk automatic mounting, safe ejection, and copying with SHA-256 verification.
 
+[Official website](https://ixiehao.github.io/ezNTFS/) · [Download for Mac](https://github.com/ixiehao/ezNTFS/releases/latest) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
+
 ## Requirements
 
-- macOS 14 or later. The local preview installer has been tested on Apple Silicon.
+- Apple Silicon Mac running macOS 14 or later.
 - [macFUSE 5.5.0](https://macfuse.github.io/) installed from the official installer.
 - Administrator approval to install the app, system mount service, and NTFS-3G driver from the ezNTFS PKG.
+- In 0.5.0 the app and bundled executables use ad-hoc signing. The PKG is unsigned and not notarized. The release page includes SHA-256 checksums.
+
+<img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three demo NTFS disks and their mount states">
 
 ## Use
 

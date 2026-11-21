@@ -1,3 +1,3 @@
 # 网站
 
-公开发布后通过项目的 GitHub Releases 分发。独立官网尚未部署。项目说明、构建和验收见[项目 README](../README.md)。
+[官网](https://ixiehao.github.io/ezNTFS/)源文件位于本目录，英、中、日正文共用 `content.json` 与模板。部署和本地验收见[官网维护](../docs/WEBSITE.md)。

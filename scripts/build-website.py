@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""Build the static ezNTFS Pages artifact from one content file."""
+
+import argparse
+from hashlib import sha256
+from html import escape
+import json
+from pathlib import Path
+import re
+from string import Template
+from xml.etree import ElementTree as ET
+
+ROOT = Path(__file__).resolve().parent.parent
+SOURCE = ROOT / "website"
+SITE = "https://ixiehao.github.io/ezNTFS/"
+REPO = "https://github.com/ixiehao/ezNTFS"
+LANG_TAGS = {"en": "en", "zh-Hans": "zh-CN", "ja": "ja"}
+COPY_ICONS = ("plug-connected", "copy", "player-eject")
+
+data = json.loads((SOURCE / "content.json").read_text(encoding="utf-8"))
+languages = data["languages"]
+if set(languages) != set(LANG_TAGS) or any(
+    copy.keys() != languages["en"].keys() for copy in languages.values()
+):
+    raise SystemExit("Website translation keys must match the English page.")
+version = data["version"]
+if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+    raise SystemExit("Expected a stable release version.")
+release = f"{REPO}/releases/tag/v{version}"
+assets = f"{REPO}/releases/download/v{version}"
+download = f"{assets}/ezNTFS-{version}-arm64.pkg"
+checksum = f"{assets}/SHA256SUMS.txt"
+template = Template((SOURCE / "index.template.html").read_text(encoding="utf-8"))
+css = (SOURCE / "styles.css").read_bytes()
+files = {
+    ".nojekyll": b"",
+    "styles.css": css,
+    "assets/ezntfs.svg": (ROOT / "Resources/Brand/AppIcon.svg").read_bytes(),
+    "assets/Tabler-Icons-LICENSE.txt": (ROOT / "Resources/Tabler/LICENSE").read_bytes(),
+}
+asset_key = sha256(css).hexdigest()[:12]
+
+
+def icon(name):
+    path = ROOT / "Resources/Tabler.xcassets" / f"{name}.imageset" / f"{name}.svg"
+    svg = path.read_text(encoding="utf-8")
+    return svg[svg.index("<svg"):].replace("<svg", '<svg aria-hidden="true" focusable="false"', 1)
+
+
+def canonical(lang):
+    return SITE + languages[lang]["directory"]
+
+
+def alternate_links():
+    links = [f'<link rel="alternate" hreflang="{LANG_TAGS[lang]}" href="{canonical(lang)}">'
+             for lang in languages]
+    return "\n  ".join(links + [f'<link rel="alternate" hreflang="x-default" href="{SITE}">'])
+
+
+def language_links(lang):
+    prefix = "../" if languages[lang]["directory"] else "./"
+    return "\n        ".join(
+        f'<a href="{prefix}{copy["directory"]}" hreflang="{LANG_TAGS[code]}" lang="{LANG_TAGS[code]}"'
+        + (' aria-current="page"' if lang == code else "")
+        + f'>{escape(copy["name"])}</a>'
+        for code, copy in languages.items()
+    )
+
+
+def render(lang, copy):
+    screenshot = f"assets/ezntfs-{lang}.png"
+    files[screenshot] = (SOURCE / screenshot).read_bytes()
+    schema = {
+        "@context": "https://schema.org", "@type": "SoftwareApplication",
+        "name": "ezNTFS", "description": copy["description"], "url": canonical(lang),
+        "inLanguage": LANG_TAGS[lang], "softwareVersion": version, "downloadUrl": download,
+        "operatingSystem": f"macOS {data['minimumMacOS']}+ (Apple Silicon)",
+        "screenshot": SITE + screenshot, "applicationCategory": "UtilitiesApplication",
+        "license": f"{REPO}/blob/main/LICENSE",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    }
+    cards = [
+        f'<article><span class="card-icon">{icon(name)}</span><h3>{escape(title)}</h3><p>{escape(body)}</p></article>'
+        for name, (title, body) in zip(COPY_ICONS, copy["workflow"])
+    ]
+    question_html = [
+        f"<details><summary>{escape(question)}</summary><p>{escape(answer)}</p></details>"
+        for question, answer in copy["questions"]
+    ]
+    steps = [step.format(fuse=data["macFUSE"]) for step in copy["installSteps"]]
+    heading_first, heading_second = copy["heading"]
+    text = {key: escape(value) for key, value in copy.items() if isinstance(value, str)}
+    document = template.substitute(
+        **{
+            **text,
+            "lang": LANG_TAGS[lang], "canonical": canonical(lang),
+            "prefix": ".." if copy["directory"] else ".", "alternates": alternate_links(),
+            "language_links": language_links(lang), "share_image": SITE + screenshot,
+            "screenshot": screenshot, "screenshot_alt": text["screenshotAlt"],
+            "screenshot_label": text["screenshotLabel"].format(version=version),
+            "schema": json.dumps(schema, ensure_ascii=False).replace("<", "\\u003c"),
+            "repository": REPO, "asset_key": asset_key, "version": version,
+            "requirements": text["requirements"].format(macos=data["minimumMacOS"]),
+            "heading_first": escape(heading_first), "heading_second": escape(heading_second),
+            "release_url": release, "download_url": download, "checksum_url": checksum,
+            "workflow_title": text["workflowTitle"],
+            "workflow_cards": "\n        ".join(cards), "questions": "\n      ".join(question_html),
+            "install_title": text["installTitle"], "sign_title": text["signTitle"],
+            "signing": text["signing"].format(version=version), "macfuse_link": text["macfuseLink"],
+            "install_steps": "\n            ".join(f"<li>{escape(step)}</li>" for step in steps),
+        }
+    )
+    markdown = [
+        f'# {copy["title"]}', "", copy["intro"], "", f'## {copy["workflowTitle"]}', "",
+        *[f"- **{title}** — {body}" for title, body in copy["workflow"]],
+        "", f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
+        "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
+        copy["signing"].format(version=version), "", copy["upgrade"], "",
+        f'[{copy["download"]}]({download}) · [{copy["checksum"]}]({checksum}) · '
+        f'[{copy["release"]}]({release})', "", f'## {copy["faq"]}', "",
+        *[f"**{question}**  \n{answer}\n" for question, answer in copy["questions"]],
+    ]
+    files[copy["directory"] + "index.html"] = document.encode()
+    files[copy["directory"] + "index.md"] = ("\n".join(markdown) + "\n").encode()
+
+
+for lang, copy in languages.items():
+    render(lang, copy)
+
+sitemap = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+for lang in languages:
+    ET.SubElement(ET.SubElement(sitemap, "url"), "loc").text = canonical(lang)
+files["sitemap.xml"] = ET.tostring(sitemap, encoding="utf-8", xml_declaration=True) + b"\n"
+files["llms.txt"] = (
+    "# ezNTFS\n\n> Read and write external NTFS disks on macOS.\n\n"
+    + "\n".join(f'- [{copy["name"]}]({canonical(lang)}index.md)' for lang, copy in languages.items())
+    + f"\n- [Source and documentation]({REPO})\n- [Release]({release})\n"
+).encode()
+verification_key = (SOURCE / "indexnow-key.txt").read_text(encoding="utf-8").strip()
+if not re.fullmatch(r"[0-9a-f]{32}", verification_key):
+    raise SystemExit("Invalid IndexNow verification key.")
+files[f"{verification_key}.txt"] = verification_key.encode()
+files["404.html"] = (
+    '<!doctype html><html lang="en"><meta charset="utf-8">'
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    '<title>Page not found · ezNTFS</title>'
+    f'<link rel="stylesheet" href="{SITE}styles.css"><main class="wrap questions">'
+    '<h1>Page not found</h1><div><p>ページが見つかりません · 找不到页面</p><nav>'
+    + "".join(f'<a href="{canonical(lang)}" lang="{LANG_TAGS[lang]}">{escape(copy["name"])}</a>'
+              for lang, copy in languages.items())
+    + "</nav></div></main></html>\n"
+).encode()
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, default=ROOT / "dist/website")
+parser.add_argument("--check", action="store_true", help="Check without rewriting generated files.")
+args = parser.parse_args()
+existing = {p.relative_to(args.output).as_posix() for p in args.output.rglob("*") if p.is_file()}
+if existing - files.keys():
+    raise SystemExit(f"Unexpected site output files: {sorted(existing - files.keys())}")
+for name, content in files.items():
+    target = args.output / name
+    if args.check:
+        if not target.is_file() or target.read_bytes() != content:
+            raise SystemExit(f"Missing or stale site output: {name}")
+    else:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+print(f"{len(languages)} localized pages, {len(files)} publishable files.")
