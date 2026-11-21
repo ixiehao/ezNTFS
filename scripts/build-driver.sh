@@ -27,11 +27,18 @@ trap 'rm -rf -- "$work"' EXIT
 # Build the NTFS code into the driver and omit gettext from its runtime dependencies.
 original_script="${0:A}"
 cd "$work/ntfs-3g-$version"
-CC=/usr/bin/clang MACOSX_DEPLOYMENT_TARGET=14.0 \
+export MACOSX_DEPLOYMENT_TARGET=14.0
+CC=/usr/bin/clang \
 FUSE_CFLAGS="-I/usr/local/include/fuse -D_FILE_OFFSET_BITS=64" \
 FUSE_LIBS="$fuse_lib" LDFLAGS="-Wl,-headerpad_max_install_names" \
 ./configure --with-fuse=external --enable-static --disable-shared --disable-nls --disable-plugins
 /usr/bin/make -j "$(/usr/sbin/sysctl -n hw.ncpu)"
+
+minimum_os="$(/usr/bin/xcrun vtool -arch "$cpu" -show-build src/ntfs-3g | /usr/bin/awk '$1 == "minos" { print $2 }')"
+if [[ "$minimum_os" != "$MACOSX_DEPLOYMENT_TARGET" ]]; then
+  print -u2 -- "NTFS-3G was linked for macOS $minimum_os, expected $MACOSX_DEPLOYMENT_TARGET."
+  exit 1
+fi
 
 mkdir -- "$output"
 mkdir -p -- "$output/bin" "$output/lib" "$output/source"
