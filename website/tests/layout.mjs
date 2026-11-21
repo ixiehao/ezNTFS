@@ -51,6 +51,10 @@ try {
             const pkg = await page.locator("[data-download]").getAttribute("href");
             assert.match(pkg, /^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v[\d.]+\/ezNTFS-[\d.]+-arm64\.pkg$/);
             const app = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+            const preview = page.locator("[data-intel-preview]");
+            assert(await preview.isVisible());
+            assert.match(await preview.getAttribute("href"), /^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/tag\/v[\d.]+-intel\.\d+$/);
+            assert.match(app.operatingSystem, /Apple Silicon/);
             const description = await page.locator('meta[name="description"]').getAttribute("content");
             assert.match(description, /NTFS/);
             assert.equal(await page.locator('meta[property="og:title"]').getAttribute("content"), await page.title());

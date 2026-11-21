@@ -27,8 +27,12 @@ if set(languages) != set(LANG_TAGS) or any(
 version = data["version"]
 if not re.fullmatch(r"\d+\.\d+\.\d+", version):
     raise SystemExit("Expected a stable release version.")
+intel_preview_version = data["intelPreviewVersion"]
+if not re.fullmatch(r"\d+\.\d+\.\d+-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*", intel_preview_version):
+    raise SystemExit("Expected an Intel preview version with a prerelease suffix.")
 last_modified = date.fromisoformat(data["lastModified"]).isoformat()
 release = f"{REPO}/releases/tag/v{version}"
+intel_preview = f"{REPO}/releases/tag/v{intel_preview_version}"
 assets = f"{REPO}/releases/download/v{version}"
 download = f"{assets}/ezNTFS-{version}-arm64.pkg"
 checksum = f"{assets}/SHA256SUMS.txt"
@@ -106,10 +110,11 @@ def render(lang, copy):
             "requirements": text["requirements"].format(macos=data["minimumMacOS"]),
             "heading_first": escape(heading_first), "heading_second": escape(heading_second),
             "release_url": release, "download_url": download, "checksum_url": checksum,
+            "intel_preview_url": intel_preview,
             "workflow_title": text["workflowTitle"],
             "workflow_cards": "\n        ".join(cards), "questions": "\n      ".join(question_html),
             "install_title": text["installTitle"], "sign_title": text["signTitle"],
-            "signing": text["signing"].format(version=version), "macfuse_link": text["macfuseLink"],
+            "macfuse_link": text["macfuseLink"],
             "macfuse_missing": text["macfuseMissing"],
             "macfuse_once": text["macfuseOnce"].format(fuse=data["macFUSE"]), "macfuse_url": macfuse,
             "install_steps": "\n            ".join(f"<li>{escape(step)}</li>" for step in steps),
@@ -122,9 +127,11 @@ def render(lang, copy):
         "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
         copy["macfuseOnce"].format(fuse=data["macFUSE"]),
         f'[{copy["macfuseLink"]}]({macfuse})', "",
-        copy["signing"].format(version=version), "", copy["upgrade"], "",
+        copy["signing"], "", copy["upgrade"], "",
         f'[{copy["download"]}]({download}) · [{copy["checksum"]}]({checksum}) · '
-        f'[{copy["release"]}]({release})', "", f'## {copy["faq"]}', "",
+        f'[{copy["release"]}]({release})', "",
+        f'{copy["intelPreviewNote"]} [{copy["intelPreviewLink"]}]({intel_preview})',
+        "", f'## {copy["faq"]}', "",
         *[f"**{question}**  \n{answer}\n" for question, answer in copy["questions"]],
     ]
     files[copy["directory"] + "index.html"] = document.encode()
@@ -143,7 +150,8 @@ files["sitemap.xml"] = ET.tostring(sitemap, encoding="utf-8", xml_declaration=Tr
 files["llms.txt"] = (
     f'# ezNTFS\n\n> {languages["en"]["description"]}\n\n'
     + "\n".join(f'- [{copy["name"]}]({canonical(lang)}index.md)' for lang, copy in languages.items())
-    + f"\n- [Source and documentation]({REPO})\n- [Release]({release})\n"
+    + f"\n- [Source and documentation]({REPO})\n- [Stable release for Apple silicon]({release})"
+    + f"\n- [Intel Mac preview]({intel_preview})\n"
 ).encode()
 verification_key = (SOURCE / "indexnow-key.txt").read_text(encoding="utf-8").strip()
 if not re.fullmatch(r"[0-9a-f]{32}", verification_key):

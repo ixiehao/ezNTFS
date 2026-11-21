@@ -1,5 +1,6 @@
 {
   "version": "0.5.1",
+  "intelPreviewVersion": "0.5.2-intel.1",
   "lastModified": "2026-11-21",
   "minimumMacOS": "14",
   "macFUSE": "5.5.0",
@@ -7,227 +8,233 @@
     "en": {
       "name": "English",
       "directory": "",
-      "title": "Read and Write NTFS External Drives on Mac | ezNTFS",
-      "description": "Write to NTFS external hard drives in Finder without reformatting. ezNTFS is free and open source for Apple Silicon Macs running macOS 14 or later.",
+      "title": "Free NTFS for Mac — Read and Write | ezNTFS",
+      "description": "ezNTFS is a free, open-source NTFS tool for macOS. Write to NTFS external drives in Finder without reformatting. Intel Mac preview available.",
       "skip": "Skip to content",
       "language": "Language",
-      "features": "Workflow",
+      "features": "How it works",
       "install": "Install",
-      "download": "Download for Mac",
+      "download": "Download for Apple silicon",
       "release": "Release notes",
       "checksum": "SHA-256 checksums",
       "source": "Source code",
       "feedback": "Report an issue",
       "privacy": "Privacy",
-      "requirements": "Apple Silicon · macOS {macos}+",
+      "requirements": "macOS {macos} or later",
       "heading": [
-        "Write to NTFS",
-        "drives on Mac"
+        "Read & write",
+        "NTFS on Mac"
       ],
-      "intro": "Is your NTFS external hard drive read-only on Mac? Mount it with ezNTFS to copy and save files in Finder while keeping its NTFS format. ezNTFS is free and open source.",
+      "intro": "Free and open source. Read and write NTFS external drives right in Finder, without reformatting.",
       "screenshotAlt": "ezNTFS window showing three external NTFS disks, individual mount states, and controls for auto mount, copying, and ejection",
       "screenshotLabel": "ezNTFS shown with simulated drives.",
-      "workflowTitle": "How to write to an NTFS drive on Mac",
+      "workflowTitle": "Use your NTFS drive on Mac",
       "workflow": [
         [
-          "Mount the drive",
-          "Choose Mount Read-Write on the drive’s card. Enable Auto Mount for that drive if you want ezNTFS to mount it on future connections."
+          "Mount",
+          "Choose Mount Read-Write. Turn on Auto Mount for drives you use often."
         ],
         [
-          "Copy and verify",
-          "Copy files and create folders on the mounted drive in Finder. For important batches, Copy & Verify reads back each copy and checks its SHA-256 digest."
+          "Copy",
+          "Copy and save files in Finder. Use Copy & Verify to check each copy with SHA-256."
         ],
         [
-          "Eject safely",
-          "Close files in use and choose Safely Eject. ezNTFS ejects the physical drive and its volumes so you can disconnect it."
+          "Eject",
+          "Close files on the drive, then choose Safely Eject."
         ]
       ],
-      "installTitle": "Set up ezNTFS",
+      "installTitle": "Install ezNTFS",
       "installSteps": [
-        "If this Mac already has macFUSE {fuse}, skip the dependency installation. You can reuse it when upgrading ezNTFS.",
-        "Run the ezNTFS PKG. The installer checks macFUSE. Approve installation of the mount service if macOS asks.",
-        "Connect an NTFS drive and choose Mount Read-Write. If access is blocked, follow the app’s disk access instructions."
+        "Open the ezNTFS PKG. The installer checks for macFUSE {fuse} and continues if it’s installed.",
+        "Approve installation of the mount service when macOS asks.",
+        "Connect your NTFS drive and choose Mount Read-Write."
       ],
-      "macfuseLink": "Open the official macFUSE release page",
+      "macfuseLink": "Get macFUSE from the official release page",
       "signTitle": "Package and permissions",
-      "signing": "In {version}, the app and bundled executables are ad-hoc signed. The PKG is unsigned and not Apple-notarized. macOS may block it under its default security settings.",
-      "upgrade": "Before upgrading or repairing the driver, close files on external drives and safely eject the drives. Reconnect them after installation.",
+      "signing": "The app uses ad-hoc signing. The PKG is unsigned and has no Apple notarization.",
+      "upgrade": "Safely eject external drives before upgrading or repairing the driver.",
       "faq": "Common questions",
       "questions": [
         [
-          "Why can’t my Mac write to an NTFS external hard drive?",
-          "macOS can usually read NTFS drives but does not provide built-in NTFS write access. In Finder, select the external drive and choose File → Get Info to check its format. If it’s NTFS, mount it with ezNTFS and copy files in Finder once the app shows it is writable."
+          "Why can’t my Mac write to my NTFS drive?",
+          "macOS can usually read NTFS but does not include write support. To check the format, select the drive in Finder and choose File → Get Info."
         ],
         [
-          "Can I write to the NTFS drive without reformatting?",
-          "Yes. Mounting with ezNTFS keeps the existing NTFS format and files. You can use the drive on Windows again after safely ejecting it from your Mac."
+          "Do I need to reformat my NTFS drive?",
+          "No. Mounting with ezNTFS keeps the NTFS format and your existing files."
         ],
         [
-          "What should I check if the NTFS drive is still read-only?",
-          "Open Help → Check Dependencies in ezNTFS and check that macFUSE, NTFS-3G and the mount service are ready. If the app reports that disk access was denied, follow its instructions to grant the mount service Full Disk Access."
+          "What if my drive is still read-only?",
+          "Open Help → Check Dependencies. If macOS blocks disk access, follow ezNTFS’s instructions to grant the mount service Full Disk Access."
         ],
         [
-          "Does auto mount apply to every drive?",
-          "You enable it for each drive you want to mount automatically. A drive without a stable identifier can be mounted manually."
+          "Can I mount drives automatically?",
+          "Turn on Mount on Connection in Settings, then enable Auto Mount for each drive you use."
         ],
         [
-          "Does ezNTFS upload files?",
-          "File operations run on your Mac. Check for Updates reads public GitHub release information only when you choose it."
+          "Are my files uploaded?",
+          "File operations stay on your Mac. Check for Updates reads public GitHub release information when you choose it."
         ]
       ],
       "license": "MIT licensed",
       "macfuseMissing": "Haven’t installed macFUSE?",
-      "macfuseOnce": "Install macFUSE {fuse} once on this Mac. When setup is complete, reopen the ezNTFS installer."
+      "macfuseOnce": "Install macFUSE {fuse} once, then reopen the ezNTFS installer. You can reuse it when upgrading ezNTFS.",
+      "intelPreviewNote": "Intel Mac support is in preview.",
+      "intelPreviewLink": "Try the Intel preview"
     },
     "zh-Hans": {
       "name": "简体中文",
       "directory": "zh/",
-      "title": "在 Mac 上写入 NTFS 移动硬盘｜ezNTFS",
-      "description": "Mac 上的 NTFS 移动硬盘只能读、无法写入？用免费开源的 ezNTFS，保留 NTFS 格式，在访达中复制文件。支持 Apple 芯片和 macOS 14 或更新版本。",
+      "title": "Mac NTFS 硬盘读写｜免费开源 ezNTFS",
+      "description": "免费开源的 macOS NTFS 读写工具。无需格式化，在访达中直接写入 NTFS 移动硬盘。Apple 芯片版可下载，Intel Mac 可试用预览版。",
       "skip": "跳到正文",
       "language": "语言",
-      "features": "使用流程",
+      "features": "用法",
       "install": "安装",
-      "download": "下载 Mac 版",
+      "download": "下载 Apple 芯片版",
       "release": "发布说明",
       "checksum": "SHA-256 校验文件",
       "source": "源代码",
       "feedback": "反馈问题",
       "privacy": "隐私",
-      "requirements": "Apple Silicon · macOS {macos} 或更新版本",
+      "requirements": "macOS {macos} 或更新版本",
       "heading": [
         "在 Mac 上",
-        "写入 NTFS 硬盘"
+        "读写 NTFS 硬盘"
       ],
-      "intro": "NTFS 移动硬盘在 Mac 上只能读、无法写入？用免费的开源工具 ezNTFS 挂载读写，保留 NTFS 格式，就能在访达里把文件复制到硬盘。",
+      "intro": "极致好用的 macOS NTFS 读写工具，免费开源。无需格式化，在访达里直接写入移动硬盘。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
       "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
-      "workflowTitle": "如何用 Mac 向 NTFS 移动硬盘写入文件",
+      "workflowTitle": "使用 NTFS 移动硬盘",
       "workflow": [
         [
-          "挂载读写",
-          "在硬盘卡片上选择「挂载读写」。将常用硬盘设为「自动挂载」，下次插入时即可自动处理。"
+          "挂载",
+          "点「挂载读写」。常用硬盘可开启「自动挂载」。"
         ],
         [
-          "复制并校验",
-          "挂载为「可读写」后，可在访达里复制文件、新建文件夹。重要文件可用「复制并校验」，逐个读回副本并核对 SHA-256。"
+          "复制",
+          "在访达中复制和保存文件。用「复制并校验」逐个核对副本的 SHA-256。"
         ],
         [
-          "安全弹出",
-          "关闭盘上正在使用的文件，再点「安全弹出」。ezNTFS 会弹出整个物理硬盘及其卷。"
+          "弹出",
+          "关闭盘上正在使用的文件，再点「安全弹出」。"
         ]
       ],
-      "installTitle": "安装并开始使用",
+      "installTitle": "安装 ezNTFS",
       "installSteps": [
-        "本机已装 macFUSE {fuse} 就可以跳过依赖安装。升级 ezNTFS 时可继续使用它。",
-        "运行 ezNTFS PKG。安装器会检查 macFUSE。按 macOS 提示授权安装挂载服务。",
-        "连接 NTFS 硬盘并选择「挂载读写」。遇到访问限制时，按 App 提示设置磁盘访问权限。"
+        "打开 ezNTFS 安装包。安装器自动检查 macFUSE {fuse}，已安装即可继续。",
+        "按 macOS 提示授权安装挂载服务。",
+        "接入 NTFS 硬盘，点「挂载读写」。"
       ],
-      "macfuseLink": "打开 macFUSE 官方发布页",
+      "macfuseLink": "前往 macFUSE 官方发布页",
       "signTitle": "安装包与权限",
-      "signing": "{version} 的 App 和随附可执行文件使用 ad-hoc 签名。PKG 本身未签名，也未经过 Apple 公证。macOS 默认安全设置可能阻止安装。",
-      "upgrade": "升级或修复驱动前，请关闭外置硬盘上的文件，安全弹出所有外置硬盘，再重新运行安装包。",
+      "signing": "App 使用 ad-hoc 签名。PKG 未签名，未经过 Apple 公证。",
+      "upgrade": "升级或修复驱动前，请安全弹出外置硬盘。",
       "faq": "常见问题",
       "questions": [
         [
           "为什么 Mac 能读取 NTFS 硬盘，却无法写入？",
-          "macOS 通常能读取 NTFS 硬盘，但系统本身不提供 NTFS 写入支持。可在访达中选中移动硬盘，选择「文件 → 显示简介」查看格式。如果是 NTFS，用 ezNTFS 挂载，看到「可读写」后就可以在访达里复制文件。"
+          "macOS 通常能读取 NTFS，但系统本身不支持写入。在访达中选中移动硬盘，点「文件 → 显示简介」即可查看格式。"
         ],
         [
-          "不格式化，也能向 NTFS 移动硬盘写入吗？",
-          "可以。ezNTFS 挂载时会保留原有 NTFS 格式和已有文件。从 Mac 安全弹出后，硬盘还能接回 Windows 使用。"
+          "用 ezNTFS 写入需要格式化硬盘吗？",
+          "无需格式化。挂载会保留 NTFS 格式和已有文件。"
         ],
         [
           "装了 ezNTFS，为什么还是无法写入？",
-          "打开「帮助 → 检查依赖…」，确认 macFUSE、NTFS-3G 和挂载服务均已就绪。若 App 提示磁盘访问被拒绝，请按提示为挂载服务开启「完全磁盘访问权限」。"
+          "打开「帮助 → 检查依赖…」。如果 macOS 拒绝磁盘访问，按 App 提示为挂载服务开启「完全磁盘访问权限」。"
         ],
         [
-          "所有硬盘都会自动挂载吗？",
-          "自动挂载需要逐盘开启。没有稳定标识的硬盘可手动挂载。"
+          "可以自动挂载硬盘吗？",
+          "在设置中开启「插盘后自动挂载」，再为常用硬盘逐个开启「自动挂载」。"
         ],
         [
           "会上传文件吗？",
-          "文件操作在本机完成。只有你点击「检查更新」时，App 才会查询 GitHub 公开发行信息。"
+          "文件只在本机处理。点击「检查更新」时，App 会查询 GitHub 的公开发行信息。"
         ]
       ],
       "license": "MIT 开源许可证",
       "macfuseMissing": "这台 Mac 还没装 macFUSE？",
-      "macfuseOnce": "每台 Mac 只需首次安装一次 macFUSE {fuse}。装好后重新打开 ezNTFS 安装包。"
+      "macfuseOnce": "macFUSE {fuse} 只需安装一次。装好后重新打开 ezNTFS 安装包，升级时可继续使用。",
+      "intelPreviewNote": "Intel Mac 正式支持正在准备中。",
+      "intelPreviewLink": "试用 Intel 预览版"
     },
     "ja": {
       "name": "日本語",
       "directory": "ja/",
-      "title": "Mac で外付け NTFS ドライブに書き込む | ezNTFS",
-      "description": "外付け NTFS ドライブをフォーマットせず、Mac の Finder でファイルを書き込めます。ezNTFS は無料のオープンソースアプリです。macOS 14 以降の Apple Silicon Mac に対応。",
+      "title": "MacでNTFSを読み書き｜無料・オープンソースのezNTFS",
+      "description": "ezNTFS は無料のオープンソース NTFS ツールです。フォーマットせずに Mac の Finder で外付け NTFS ドライブに書き込めます。Intel Mac 向けプレビューも公開中。",
       "skip": "本文へ移動",
       "language": "言語",
       "features": "使い方",
       "install": "インストール",
-      "download": "Mac 版をダウンロード",
+      "download": "Apple シリコン版をダウンロード",
       "release": "リリース情報",
       "checksum": "SHA-256 チェックサム",
       "source": "ソースコード",
       "feedback": "問題を報告",
       "privacy": "プライバシー",
-      "requirements": "Apple Silicon · macOS {macos} 以降",
+      "requirements": "macOS {macos} 以降",
       "heading": [
-        "Mac で NTFS に",
-        "書き込む"
+        "Mac で NTFS を",
+        "読み書き"
       ],
-      "intro": "外付け NTFS ドライブが Mac で読み取り専用になっていませんか？無料のオープンソースアプリ ezNTFS で読み書き可能な状態にマウントすれば、NTFS 形式のまま Finder でファイルをコピーできます。",
+      "intro": "無料で使えるオープンソースアプリ。フォーマットせずに、外付け NTFS ドライブを Finder で読み書きできます。",
       "screenshotAlt": "3 台の外付け NTFS ディスクとマウント状態、自動マウント、コピー、取り出しを表示する ezNTFS のウインドウ",
       "screenshotLabel": "ezNTFS の画面。ディスクはデモ用です。",
-      "workflowTitle": "Mac で外付け NTFS ドライブに書き込む方法",
+      "workflowTitle": "外付け NTFS ドライブを使う",
       "workflow": [
         [
-          "読み書きでマウント",
-          "ディスクのカードで「読み書きでマウント」を選びます。よく使うディスクは、次回の接続時に自動でマウントするよう設定できます。"
+          "マウント",
+          "「読み書きでマウント」を選びます。よく使うドライブは自動マウントに設定できます。"
         ],
         [
-          "コピーして検証",
-          "読み書きでマウントしたら、Finder でファイルのコピーやフォルダの作成ができます。「コピーして検証」では、コピーを読み戻してファイルごとに SHA-256 を照合します。"
+          "コピー",
+          "Finder でファイルをコピーできます。「コピーして検証」では各ファイルの SHA-256 を照合します。"
         ],
         [
-          "安全に取り出す",
-          "ディスク上のファイルを閉じて「安全に取り出す」を選ぶと、物理ディスクとそのボリュームを取り出せます。"
+          "取り出し",
+          "ドライブ上のファイルを閉じて「安全に取り出す」を選びます。"
         ]
       ],
-      "installTitle": "ezNTFS をセットアップ",
+      "installTitle": "ezNTFS をインストール",
       "installSteps": [
-        "この Mac に macFUSE {fuse} がインストール済みなら、そのまま使えます。ezNTFS をアップデートするときも再インストールは不要です。",
-        "ezNTFS の PKG を実行します。インストーラは macFUSE を確認します。macOS の画面に従ってマウントサービスのインストールを許可してください。",
-        "NTFS ディスクを接続して「読み書きでマウント」を選びます。アクセスが拒否された場合は、アプリの案内に従って設定してください。"
+        "ezNTFS の PKG を開きます。macFUSE {fuse} がインストール済みなら、そのまま続けられます。",
+        "macOS の案内に従い、マウントサービスのインストールを許可します。",
+        "NTFS ドライブを接続し、「読み書きでマウント」を選びます。"
       ],
       "macfuseLink": "macFUSE の公式リリースページを開く",
       "signTitle": "インストーラとアクセス権",
-      "signing": "{version} のアプリと同梱の実行ファイルには ad-hoc 署名を使用しています。PKG は未署名で、Apple の公証は受けていません。macOS の既定のセキュリティ設定でインストールがブロックされる場合があります。",
-      "upgrade": "アップデートやドライバ修復の前に、外付けディスク上のファイルを閉じてすべて安全に取り出し、インストーラを開き直してください。",
+      "signing": "アプリは ad-hoc 署名済みです。PKG は未署名で、Apple の公証は受けていません。",
+      "upgrade": "アップデートやドライバの修復前に、外付けドライブを安全に取り出してください。",
       "faq": "よくある質問",
       "questions": [
         [
           "Mac で NTFS ドライブに書き込めないのはなぜですか？",
-          "macOS は通常 NTFS ドライブを読み取れますが、標準では書き込みに対応していません。Finder でドライブを選び、「ファイル → 情報を見る」でフォーマットを確認できます。NTFS なら ezNTFS でマウントし、読み書き可能になってから Finder でファイルをコピーしてください。"
+          "macOS は通常 NTFS を読み取れますが、標準では書き込めません。形式は Finder の「ファイル → 情報を見る」で確認できます。"
         ],
         [
-          "フォーマットせずに外付け NTFS ドライブに書き込めますか？",
-          "はい。ezNTFS でマウントしても NTFS 形式と既存のファイルはそのままです。Mac から安全に取り出した後は Windows でも引き続き使えます。"
+          "書き込む前にドライブのフォーマットが必要ですか？",
+          "不要です。マウントしても NTFS 形式と既存のファイルはそのままです。"
         ],
         [
-          "ezNTFS をインストールしても書き込めないときは？",
-          "「ヘルプ → 依存ツールを確認…」で macFUSE、NTFS-3G、マウントサービスの状態を確認してください。ディスクへのアクセスが拒否された場合は、アプリの案内に従ってマウントサービスにフルディスクアクセスを許可します。"
+          "インストール後も書き込めないときは？",
+          "「ヘルプ → 依存ツールを確認…」を開きます。アクセスが拒否された場合は、アプリの案内に従ってマウントサービスにフルディスクアクセスを許可します。"
         ],
         [
-          "すべてのディスクが自動でマウントされますか？",
-          "自動マウントはディスクごとに有効にします。安定した識別子がないディスクは手動でマウントできます。"
+          "自動でマウントできますか？",
+          "設定で「接続時に自動マウント」を有効にし、ドライブごとに「自動マウント」をオンにします。"
         ],
         [
           "ファイルはアップロードされますか？",
-          "ファイル操作は Mac 上で行われます。「アップデートを確認」を選んだときだけ、GitHub の公開リリース情報を取得します。"
+          "ファイル操作は Mac 上で行われます。「アップデートを確認」を選ぶと、GitHub の公開リリース情報を取得します。"
         ]
       ],
       "license": "MIT ライセンス",
       "macfuseMissing": "macFUSE をまだインストールしていない場合",
-      "macfuseOnce": "macFUSE {fuse} は Mac ごとに初回のみインストールします。完了したら ezNTFS のインストーラを開き直してください。"
+      "macfuseOnce": "macFUSE {fuse} を初回にインストールし、ezNTFS のインストーラを開き直します。ezNTFS の更新時もそのまま使えます。",
+      "intelPreviewNote": "Intel Mac の正式対応に向けて準備中です。",
+      "intelPreviewLink": "Intel 版プレビューを試す"
     }
   }
 }
