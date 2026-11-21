@@ -75,7 +75,7 @@ verify_image() {
     tar -xzf "$archive" -C "$work"
     (
         cd "$work/ntfs-3g-2026.9.28"
-        CC=/usr/bin/clang FUSE_CFLAGS='-I/usr/local/include/fuse -D_FILE_OFFSET_BITS=64' \
+        CC=/usr/bin/clang ac_cv_header_libintl_h=no FUSE_CFLAGS='-I/usr/local/include/fuse -D_FILE_OFFSET_BITS=64' \
             FUSE_LIBS=/usr/local/lib/libfuse.2.dylib \
             ./configure --with-fuse=external --enable-static --disable-shared --disable-nls --disable-plugins &&
         /usr/bin/make -j 4 -C libntfs-3g &&

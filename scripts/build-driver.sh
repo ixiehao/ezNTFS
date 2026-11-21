@@ -32,7 +32,9 @@ trap 'rm -rf -- "$work"' EXIT
 original_script="${0:A}"
 cd "$work/ntfs-3g-$version"
 export MACOSX_DEPLOYMENT_TARGET=14.0
+# Autoconf may find Homebrew's libintl.h even with NLS disabled.
 CC=/usr/bin/clang \
+ac_cv_header_libintl_h=no \
 CFLAGS="-arch $cpu -g -O2" LDFLAGS="-arch $cpu -Wl,-headerpad_max_install_names" \
 FUSE_CFLAGS="-I/usr/local/include/fuse -D_FILE_OFFSET_BITS=64" \
 FUSE_LIBS="$fuse_lib" \
