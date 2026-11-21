@@ -351,14 +351,14 @@ struct WorkspaceView: View {
             VStack(spacing: 11) {
                 settingToggle(
                     language.text("settings.autoMount"), detail: language.text("settings.autoMountHint"), identifier: "auto-mount-global",
-                    isOn: Binding(get: { model.autoMount }, set: model.setAutomatic)
+                    isOn: Binding(get: { model.autoMount }, set: { model.setAutomatic($0) })
                 )
                 .disabled(model.activity != nil)
                 settingToggle(language.text("settings.login"), detail: model.loginStatus == .requiresApproval
                               ? language.text("settings.loginHint") : nil,
                               identifier: "login-open", isOn: Binding(
                                 get: { model.loginStatus == .enabled || model.loginStatus == .requiresApproval },
-                                set: model.setLogin
+                                set: { model.setLogin($0) }
                               ))
                 if let disk = model.selected {
                     Divider()
@@ -370,7 +370,7 @@ struct WorkspaceView: View {
             }
             Divider()
             Picker(language.text("settings.language"), selection: Binding(
-                get: { model.language }, set: model.setLanguage
+                get: { model.language }, set: { model.setLanguage($0) }
             )) {
                 ForEach(AppLanguage.allCases) { option in
                     Text(language.name(of: option)).tag(option)

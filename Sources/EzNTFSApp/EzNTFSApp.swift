@@ -115,7 +115,7 @@ struct EzNTFSApp: App {
             }
             CommandMenu(model.language.text("settings.language")) {
                 Picker(model.language.text("settings.language"), selection: Binding(
-                    get: { model.language }, set: model.setLanguage
+                    get: { model.language }, set: { model.setLanguage($0) }
                 )) {
                     ForEach(AppLanguage.allCases) { option in
                         Text(model.language.name(of: option)).tag(option)
