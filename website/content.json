@@ -115,7 +115,7 @@
       "intro": "极致好用的 macOS NTFS 读写工具，免费开源。无需格式化，在访达里直接写入移动硬盘。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
       "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
-      "workflowTitle": "在 Mac 上使用 NTFS 移动硬盘",
+      "workflowTitle": "NTFS 移动硬盘图文指南",
       "workflow": [
         [
           "挂载读写",
@@ -169,7 +169,7 @@
       "license": "MIT 开源许可证",
       "macfuseMissing": "这台 Mac 还没装 macFUSE？",
       "macfuseOnce": "macFUSE {fuse} 只需安装一次。装好后重新打开 ezNTFS 安装包，升级时可继续使用。",
-      "intelPreviewNote": "Intel Mac 正式支持正在准备中，欢迎试用和反馈。",
+      "intelPreviewNote": "正式支持正在准备中，欢迎试用和反馈。",
       "intelPreviewLink": "下载 Intel 预览版",
       "downloadNav": "下载",
       "downloadTitle": "下载 ezNTFS",
