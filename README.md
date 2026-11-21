@@ -4,14 +4,14 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 ezNTFS mounts external NTFS disks on macOS for reading and writing. It uses NTFS-3G and macFUSE, and supports per-disk automatic mounting, safe ejection, and copying with SHA-256 verification.
 
-[Official website](https://ixiehao.github.io/ezNTFS/) · [Download for Mac](https://github.com/ixiehao/ezNTFS/releases/latest) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
+[Official website](https://ixiehao.github.io/ezNTFS/) · [Download 0.5.1 for Mac](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ezNTFS-0.5.1-arm64.pkg) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.1) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
 
 ## Requirements
 
 - Apple Silicon Mac running macOS 14 or later.
-- An existing macFUSE 5.5.0 installation is enough. Run the ezNTFS PKG directly if it’s already installed. Otherwise install it once per Mac from the [official macFUSE 5.5.0 release](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0).
+- The ezNTFS installer automatically checks for macFUSE 5.5.0. If it’s already installed, continue with ezNTFS. If it’s missing, install it once per Mac from the [official macFUSE 5.5.0 release](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0).
 - Administrator approval to install the app, system mount service, and NTFS-3G driver from the ezNTFS PKG.
-- In 0.5.0 the app and bundled executables use ad-hoc signing. The PKG is unsigned and not notarized. The release page includes SHA-256 checksums.
+- The app and bundled executables use ad-hoc signing. The PKG is unsigned and not notarized. The release page includes SHA-256 checksums.
 
 <img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three demo NTFS disks and their mount states">
 

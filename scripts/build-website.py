@@ -98,7 +98,7 @@ def render(lang, copy):
             "prefix": ".." if copy["directory"] else ".", "alternates": alternate_links(),
             "language_links": language_links(lang), "share_image": SITE + screenshot,
             "screenshot": screenshot, "screenshot_alt": text["screenshotAlt"],
-            "screenshot_label": text["screenshotLabel"].format(version=version),
+            "screenshot_label": text["screenshotLabel"],
             "schema": json.dumps(schema, ensure_ascii=False).replace("<", "\\u003c"),
             "repository": REPO, "asset_key": asset_key, "version": version,
             "requirements": text["requirements"].format(macos=data["minimumMacOS"]),

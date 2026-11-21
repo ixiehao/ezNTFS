@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.5.1",
   "minimumMacOS": "14",
   "macFUSE": "5.5.0",
   "languages": {
@@ -25,7 +25,7 @@
       ],
       "intro": "Connect an external NTFS drive and use it in Finder. Mount it for read and write, verify important copies, and eject it when you’re done.",
       "screenshotAlt": "ezNTFS window showing three external NTFS disks, individual mount states, and controls for auto mount, copying, and ejection",
-      "screenshotLabel": "ezNTFS {version} shown with simulated drives.",
+      "screenshotLabel": "ezNTFS shown with simulated drives.",
       "workflowTitle": "From connection to safe ejection",
       "workflow": [
         [
@@ -92,7 +92,7 @@
       ],
       "intro": "连接外置 NTFS 硬盘后，在访达中直接使用。挂载读写、校验重要文件的副本，用完再安全弹出。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
-      "screenshotLabel": "ezNTFS {version} 实际界面，使用模拟硬盘。",
+      "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
       "workflowTitle": "从接入硬盘到安全弹出",
       "workflow": [
         [
@@ -159,7 +159,7 @@
       ],
       "intro": "外付け NTFS ディスクを接続して Finder で使えます。読み書きでマウントし、大切なファイルのコピーを検証して、安全に取り出せます。",
       "screenshotAlt": "3 台の外付け NTFS ディスクとマウント状態、自動マウント、コピー、取り出しを表示する ezNTFS のウインドウ",
-      "screenshotLabel": "ezNTFS {version} の画面。ディスクはデモ用です。",
+      "screenshotLabel": "ezNTFS の画面。ディスクはデモ用です。",
       "workflowTitle": "接続から安全な取り出しまで",
       "workflow": [
         [

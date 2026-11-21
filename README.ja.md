@@ -4,14 +4,14 @@
 
 ezNTFS は、macOS で外付け NTFS ディスクを読み書きするためのアプリです。NTFS-3G と macFUSE を使用し、ディスクごとの自動マウント、安全な取り出し、SHA-256 でのコピー検証に対応しています。
 
-[公式サイト](https://ixiehao.github.io/ezNTFS/ja/) · [Mac 版のダウンロード](https://github.com/ixiehao/ezNTFS/releases/latest) · [問題を報告](https://github.com/ixiehao/ezNTFS/issues)
+[公式サイト](https://ixiehao.github.io/ezNTFS/ja/) · [Mac 版 0.5.1 のダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ezNTFS-0.5.1-arm64.pkg) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.1) · [問題を報告](https://github.com/ixiehao/ezNTFS/issues)
 
 ## 動作環境
 
 - macOS 14 以降を搭載した Apple Silicon Mac。
-- macFUSE 5.5.0 がインストール済みなら、ezNTFS の PKG をそのまま実行できます。未インストールの場合は、[macFUSE 5.5.0 の公式リリース](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)から Mac ごとに初回のみインストールしてください。
+- ezNTFS のインストーラは macFUSE 5.5.0 を自動で確認します。インストール済みなら、そのまま続行できます。未インストールの場合は、[macFUSE 5.5.0 の公式リリース](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)から Mac ごとに初回のみインストールしてください。
 - ezNTFS の PKG からアプリ、マウントサービス、NTFS-3G ドライバをインストールするための管理者権限。
-- 0.5.0 のアプリと同梱の実行ファイルは ad-hoc 署名済みです。PKG は未署名で、Apple の公証は受けていません。リリースページに SHA-256 チェックサムがあります。
+- アプリと同梱の実行ファイルは ad-hoc 署名済みです。PKG は未署名で、Apple の公証は受けていません。リリースページに SHA-256 チェックサムがあります。
 
 <img src="website/assets/ezntfs-ja.png" width="660" alt="3 台のデモ用 NTFS ディスクとマウント状態を表示する ezNTFS">
 
