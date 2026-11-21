@@ -24,6 +24,8 @@ await new Promise((done) => server.listen(0, "127.0.0.1", done));
 const base = "http://127.0.0.1:" + server.address().port + "/ezNTFS/";
 const site = "https://ixiehao.github.io/ezNTFS/";
 const locales = [["", "en"], ["zh/", "zh-CN"], ["ja/", "ja"]];
+const alternatePages = Object.fromEntries(locales.map(([path, locale]) => [locale, site + path]));
+alternatePages["x-default"] = site;
 const browserTypes = { chromium, webkit };
 
 try {
@@ -37,7 +39,11 @@ try {
             assert.equal((await page.goto(base + path)).status(), 200);
             assert.equal(await page.locator("html").getAttribute("lang"), locale);
             assert.equal(await page.locator("link[rel=canonical]").getAttribute("href"), site + path);
-            assert.equal(await page.locator("link[hreflang]").count(), 4);
+            assert.deepEqual(
+              await page.locator('link[rel="alternate"][hreflang]').evaluateAll((links) =>
+                Object.fromEntries(links.map((link) => [link.hreflang, link.href]))),
+              alternatePages,
+            );
             assert.equal(await page.locator(".languages [aria-current=page]").count(), 1);
             assert(await page.locator("h1").isVisible());
             assert.equal(await page.locator(".workflow article").count(), 3);
@@ -45,6 +51,12 @@ try {
             const pkg = await page.locator("[data-download]").getAttribute("href");
             assert.match(pkg, /^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v[\d.]+\/ezNTFS-[\d.]+-arm64\.pkg$/);
             const app = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+            const description = await page.locator('meta[name="description"]').getAttribute("content");
+            assert.match(description, /NTFS/);
+            assert.equal(await page.locator('meta[property="og:title"]').getAttribute("content"), await page.title());
+            assert.equal(await page.locator('meta[property="og:description"]').getAttribute("content"), description);
+            assert.equal(app.description, description);
+            assert.equal(app.inLanguage, locale);
             assert.equal(app.url, site + path);
             assert.equal(app.downloadUrl, pkg);
             const metrics = await page.evaluate(() => ({

@@ -1,13 +1,14 @@
 {
   "version": "0.5.1",
+  "lastModified": "2026-11-21",
   "minimumMacOS": "14",
   "macFUSE": "5.5.0",
   "languages": {
     "en": {
       "name": "English",
       "directory": "",
-      "title": "ezNTFS — Read and write NTFS on Mac",
-      "description": "Mount external NTFS drives for read and write on Apple Silicon Macs. Set up auto mount per drive, verify copied files, and safely eject.",
+      "title": "Read and Write NTFS External Drives on Mac | ezNTFS",
+      "description": "Write to NTFS external hard drives in Finder without reformatting. ezNTFS is free and open source for Apple Silicon Macs running macOS 14 or later.",
       "skip": "Skip to content",
       "language": "Language",
       "features": "Workflow",
@@ -20,13 +21,13 @@
       "privacy": "Privacy",
       "requirements": "Apple Silicon · macOS {macos}+",
       "heading": [
-        "Read and write",
-        "NTFS on Mac."
+        "Write to NTFS",
+        "drives on Mac"
       ],
-      "intro": "Connect an external NTFS drive and use it in Finder. Mount it for read and write, verify important copies, and eject it when you’re done.",
+      "intro": "Is your NTFS external hard drive read-only on Mac? Mount it with ezNTFS to copy and save files in Finder while keeping its NTFS format. ezNTFS is free and open source.",
       "screenshotAlt": "ezNTFS window showing three external NTFS disks, individual mount states, and controls for auto mount, copying, and ejection",
       "screenshotLabel": "ezNTFS shown with simulated drives.",
-      "workflowTitle": "From connection to safe ejection",
+      "workflowTitle": "How to write to an NTFS drive on Mac",
       "workflow": [
         [
           "Mount the drive",
@@ -34,7 +35,7 @@
         ],
         [
           "Copy and verify",
-          "Use Finder for everyday work. For important batches, Copy & Verify reads each copy back and checks its SHA-256 digest before delivering it."
+          "Copy files and create folders on the mounted drive in Finder. For important batches, Copy & Verify reads back each copy and checks its SHA-256 digest."
         ],
         [
           "Eject safely",
@@ -54,8 +55,16 @@
       "faq": "Common questions",
       "questions": [
         [
-          "Do I need to reformat my drive?",
-          "ezNTFS uses the NTFS file system already on the drive. Mounting keeps the drive’s file system and existing files."
+          "Why can’t my Mac write to an NTFS external hard drive?",
+          "macOS can usually read NTFS drives but does not provide built-in NTFS write access. In Finder, select the external drive and choose File → Get Info to check its format. If it’s NTFS, mount it with ezNTFS and copy files in Finder once the app shows it is writable."
+        ],
+        [
+          "Can I write to the NTFS drive without reformatting?",
+          "Yes. Mounting with ezNTFS keeps the existing NTFS format and files. You can use the drive on Windows again after safely ejecting it from your Mac."
+        ],
+        [
+          "What should I check if the NTFS drive is still read-only?",
+          "Open Help → Check Dependencies in ezNTFS and check that macFUSE, NTFS-3G and the mount service are ready. If the app reports that disk access was denied, follow its instructions to grant the mount service Full Disk Access."
         ],
         [
           "Does auto mount apply to every drive?",
@@ -73,8 +82,8 @@
     "zh-Hans": {
       "name": "简体中文",
       "directory": "zh/",
-      "title": "ezNTFS — 在 Mac 上读写 NTFS 硬盘",
-      "description": "在 Apple Silicon Mac 上读写外置 NTFS 硬盘，逐盘设置自动挂载，复制后校验，并安全弹出。",
+      "title": "在 Mac 上写入 NTFS 移动硬盘｜ezNTFS",
+      "description": "Mac 上的 NTFS 移动硬盘只能读、无法写入？用免费开源的 ezNTFS，保留 NTFS 格式，在访达中复制文件。支持 Apple 芯片和 macOS 14 或更新版本。",
       "skip": "跳到正文",
       "language": "语言",
       "features": "使用流程",
@@ -88,12 +97,12 @@
       "requirements": "Apple Silicon · macOS {macos} 或更新版本",
       "heading": [
         "在 Mac 上",
-        "读写 NTFS 硬盘。"
+        "写入 NTFS 硬盘"
       ],
-      "intro": "连接外置 NTFS 硬盘后，在访达中直接使用。挂载读写、校验重要文件的副本，用完再安全弹出。",
+      "intro": "NTFS 移动硬盘在 Mac 上只能读、无法写入？用免费的开源工具 ezNTFS 挂载读写，保留 NTFS 格式，就能在访达里把文件复制到硬盘。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
       "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
-      "workflowTitle": "从接入硬盘到安全弹出",
+      "workflowTitle": "如何用 Mac 向 NTFS 移动硬盘写入文件",
       "workflow": [
         [
           "挂载读写",
@@ -101,7 +110,7 @@
         ],
         [
           "复制并校验",
-          "日常文件可以在访达中处理。重要文件可用「复制并校验」，逐个读回并核对 SHA-256，再交付整批副本。"
+          "挂载为「可读写」后，可在访达里复制文件、新建文件夹。重要文件可用「复制并校验」，逐个读回副本并核对 SHA-256。"
         ],
         [
           "安全弹出",
@@ -121,8 +130,16 @@
       "faq": "常见问题",
       "questions": [
         [
-          "需要格式化硬盘吗？",
-          "ezNTFS 直接使用硬盘已有的 NTFS 文件系统。挂载操作保留原有格式和文件。"
+          "为什么 Mac 能读取 NTFS 硬盘，却无法写入？",
+          "macOS 通常能读取 NTFS 硬盘，但系统本身不提供 NTFS 写入支持。可在访达中选中移动硬盘，选择「文件 → 显示简介」查看格式。如果是 NTFS，用 ezNTFS 挂载，看到「可读写」后就可以在访达里复制文件。"
+        ],
+        [
+          "不格式化，也能向 NTFS 移动硬盘写入吗？",
+          "可以。ezNTFS 挂载时会保留原有 NTFS 格式和已有文件。从 Mac 安全弹出后，硬盘还能接回 Windows 使用。"
+        ],
+        [
+          "装了 ezNTFS，为什么还是无法写入？",
+          "打开「帮助 → 检查依赖…」，确认 macFUSE、NTFS-3G 和挂载服务均已就绪。若 App 提示磁盘访问被拒绝，请按提示为挂载服务开启「完全磁盘访问权限」。"
         ],
         [
           "所有硬盘都会自动挂载吗？",
@@ -140,8 +157,8 @@
     "ja": {
       "name": "日本語",
       "directory": "ja/",
-      "title": "ezNTFS — Mac で NTFS ディスクを読み書き",
-      "description": "Apple Silicon Mac で外付け NTFS ディスクを読み書き。ディスクごとの自動マウント、コピーの検証、安全な取り出しに対応。",
+      "title": "Mac で外付け NTFS ドライブに書き込む | ezNTFS",
+      "description": "外付け NTFS ドライブをフォーマットせず、Mac の Finder でファイルを書き込めます。ezNTFS は無料のオープンソースアプリです。macOS 14 以降の Apple Silicon Mac に対応。",
       "skip": "本文へ移動",
       "language": "言語",
       "features": "使い方",
@@ -154,13 +171,13 @@
       "privacy": "プライバシー",
       "requirements": "Apple Silicon · macOS {macos} 以降",
       "heading": [
-        "Mac で NTFS を",
-        "読み書き。"
+        "Mac で NTFS に",
+        "書き込む"
       ],
-      "intro": "外付け NTFS ディスクを接続して Finder で使えます。読み書きでマウントし、大切なファイルのコピーを検証して、安全に取り出せます。",
+      "intro": "外付け NTFS ドライブが Mac で読み取り専用になっていませんか？無料のオープンソースアプリ ezNTFS で読み書き可能な状態にマウントすれば、NTFS 形式のまま Finder でファイルをコピーできます。",
       "screenshotAlt": "3 台の外付け NTFS ディスクとマウント状態、自動マウント、コピー、取り出しを表示する ezNTFS のウインドウ",
       "screenshotLabel": "ezNTFS の画面。ディスクはデモ用です。",
-      "workflowTitle": "接続から安全な取り出しまで",
+      "workflowTitle": "Mac で外付け NTFS ドライブに書き込む方法",
       "workflow": [
         [
           "読み書きでマウント",
@@ -168,7 +185,7 @@
         ],
         [
           "コピーして検証",
-          "日常のファイル操作は Finder で行えます。「コピーして検証」では、コピーを読み戻し、SHA-256 をファイルごとに照合してからまとめて保存します。"
+          "読み書きでマウントしたら、Finder でファイルのコピーやフォルダの作成ができます。「コピーして検証」では、コピーを読み戻してファイルごとに SHA-256 を照合します。"
         ],
         [
           "安全に取り出す",
@@ -188,8 +205,16 @@
       "faq": "よくある質問",
       "questions": [
         [
-          "ディスクの初期化は必要ですか？",
-          "ディスクの既存の NTFS ファイルシステムを使います。マウントしても形式と既存のファイルはそのままです。"
+          "Mac で NTFS ドライブに書き込めないのはなぜですか？",
+          "macOS は通常 NTFS ドライブを読み取れますが、標準では書き込みに対応していません。Finder でドライブを選び、「ファイル → 情報を見る」でフォーマットを確認できます。NTFS なら ezNTFS でマウントし、読み書き可能になってから Finder でファイルをコピーしてください。"
+        ],
+        [
+          "フォーマットせずに外付け NTFS ドライブに書き込めますか？",
+          "はい。ezNTFS でマウントしても NTFS 形式と既存のファイルはそのままです。Mac から安全に取り出した後は Windows でも引き続き使えます。"
+        ],
+        [
+          "ezNTFS をインストールしても書き込めないときは？",
+          "「ヘルプ → 依存ツールを確認…」で macFUSE、NTFS-3G、マウントサービスの状態を確認してください。ディスクへのアクセスが拒否された場合は、アプリの案内に従ってマウントサービスにフルディスクアクセスを許可します。"
         ],
         [
           "すべてのディスクが自動でマウントされますか？",

@@ -10,7 +10,7 @@ python3 scripts/build-website.py --check
 python3 -m http.server 8000 --bind 127.0.0.1 --directory dist/website
 ```
 
-`website/content.json` 集中维护版本、系统要求、依赖和三语正文。发布新的安装包后更新版本与对应的真实 App 截图。网页、Markdown、站点地图和结构化数据均从同一份内容生成。截图来自隔离 App 的演示磁盘模式。窗口以及 Tabler 操作图标和原始许可证随站点提供。
+`website/content.json` 集中维护版本、系统要求、依赖和三语正文。三语页面有实质内容更新时，将 `lastModified` 设为实际更新日期，供站点地图使用。发布新的安装包后更新版本与对应的真实 App 截图。网页、Markdown、站点地图和结构化数据均从同一份内容生成。截图来自隔离 App 的演示磁盘模式。窗口以及 Tabler 操作图标和原始许可证随站点提供。
 
 验收运行 `npm ci --prefix website --ignore-scripts` 和 `npx --prefix website playwright install chromium webkit`，然后运行 `npm test --prefix website`。检查覆盖三语、320 / 768 / 1440 像素、无 JavaScript 访问、语言链接、FAQ 键盘操作、可见截图和横向溢出。
 

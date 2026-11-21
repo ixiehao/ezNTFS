@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md) · 日本語
 
-ezNTFS は、macOS で外付け NTFS ディスクを読み書きするためのアプリです。NTFS-3G と macFUSE を使用し、ディスクごとの自動マウント、安全な取り出し、SHA-256 でのコピー検証に対応しています。
+ezNTFS は、Mac で外付け NTFS ドライブを読み書きできる無料のオープンソースアプリです。NTFS-3G と macFUSE を使用し、NTFS 形式のまま Finder でファイルを書き込めます。ドライブごとの自動マウント、安全な取り出し、SHA-256 によるコピー検証にも対応しています。
 
 [公式サイト](https://ixiehao.github.io/ezNTFS/ja/) · [Mac 版 0.5.1 のダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ezNTFS-0.5.1-arm64.pkg) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.1) · [問題を報告](https://github.com/ixiehao/ezNTFS/issues)
 

@@ -2,6 +2,7 @@
 """Build the static ezNTFS Pages artifact from one content file."""
 
 import argparse
+from datetime import date
 from hashlib import sha256
 from html import escape
 import json
@@ -26,6 +27,7 @@ if set(languages) != set(LANG_TAGS) or any(
 version = data["version"]
 if not re.fullmatch(r"\d+\.\d+\.\d+", version):
     raise SystemExit("Expected a stable release version.")
+last_modified = date.fromisoformat(data["lastModified"]).isoformat()
 release = f"{REPO}/releases/tag/v{version}"
 assets = f"{REPO}/releases/download/v{version}"
 download = f"{assets}/ezNTFS-{version}-arm64.pkg"
@@ -134,10 +136,12 @@ for lang, copy in languages.items():
 
 sitemap = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
 for lang in languages:
-    ET.SubElement(ET.SubElement(sitemap, "url"), "loc").text = canonical(lang)
+    entry = ET.SubElement(sitemap, "url")
+    ET.SubElement(entry, "loc").text = canonical(lang)
+    ET.SubElement(entry, "lastmod").text = last_modified
 files["sitemap.xml"] = ET.tostring(sitemap, encoding="utf-8", xml_declaration=True) + b"\n"
 files["llms.txt"] = (
-    "# ezNTFS\n\n> Read and write external NTFS disks on macOS.\n\n"
+    f'# ezNTFS\n\n> {languages["en"]["description"]}\n\n'
     + "\n".join(f'- [{copy["name"]}]({canonical(lang)}index.md)' for lang, copy in languages.items())
     + f"\n- [Source and documentation]({REPO})\n- [Release]({release})\n"
 ).encode()
