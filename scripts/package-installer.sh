@@ -35,6 +35,7 @@ else
 fi
 build="$(/usr/libexec/PlistBuddy -c 'Print :build' "$driver/candidate.plist")"
 fuse="$(/usr/libexec/PlistBuddy -c 'Print :macFUSEVersion' "$driver/candidate.plist")"
+[[ "$fuse" =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]]
 hash_file() { /usr/bin/shasum -a 256 "$1" | /usr/bin/cut -d ' ' -f 1; }
 driver_hash="$(hash_file "$driver/bin/ntfs-3g")"
 fuse_hash="$(hash_file "$driver/lib/libfuse.2.dylib")"
@@ -78,6 +79,7 @@ build_product() {
   local component="$1" identifier="$2" package="$3"
   local definition="$stage/Distribution.xml"
   /usr/bin/sed -e "s|@ARCHITECTURE@|$architecture|g" \
+    -e "s|@MACFUSE_VERSION@|$fuse|g" \
     -e "s|@IDENTIFIER@|$identifier|g" -e "s|@VERSION@|$version|g" \
     -e "s|@COMPONENT@|$component|g" scripts/installer/Distribution.xml.in > "$definition"
   /usr/bin/productbuild --distribution "$definition" --package-path "$stage/components" \

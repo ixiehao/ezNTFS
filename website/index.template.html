@@ -65,8 +65,12 @@
           <ol>$install_steps</ol>
           <div class="install-actions">
             <a class="button primary" href="$download_url">$download</a>
-            <a class="text-link" href="https://macfuse.github.io/">$macfuse_link</a>
           </div>
+          <details class="depend-install">
+            <summary>$macfuse_missing</summary>
+            <p>$macfuse_once</p>
+            <a class="text-link" href="$macfuse_url">$macfuse_link</a>
+          </details>
         </div>
         <aside class="package">
           <h3>$sign_title</h3>

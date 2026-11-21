@@ -9,7 +9,7 @@ ezNTFS mounts external NTFS disks on macOS for reading and writing. It uses NTFS
 ## Requirements
 
 - Apple Silicon Mac running macOS 14 or later.
-- [macFUSE 5.5.0](https://macfuse.github.io/) installed from the official installer.
+- An existing macFUSE 5.5.0 installation is enough. Run the ezNTFS PKG directly if it’s already installed. Otherwise install it once per Mac from the [official macFUSE 5.5.0 release](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0).
 - Administrator approval to install the app, system mount service, and NTFS-3G driver from the ezNTFS PKG.
 - In 0.5.0 the app and bundled executables use ad-hoc signing. The PKG is unsigned and not notarized. The release page includes SHA-256 checksums.
 

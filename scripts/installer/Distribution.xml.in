@@ -4,7 +4,7 @@
   <options customize="never" require-scripts="true" hostArchitectures="@ARCHITECTURE@"/>
   <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
   <welcome file="Welcome.html" mime-type="text/html"/>
-  <installation-check script="checkDriverUsage()"/>
+  <installation-check script="checkMacFUSE() &amp;&amp; checkDriverUsage()"/>
   <script><![CDATA[
 function isExternal(entry) {
     var connection = entry["Protocol Characteristics"] || {};
@@ -13,6 +13,49 @@ function isExternal(entry) {
     }
     var parents = system.ioregistry.parentsOf(entry) || [];
     return Array.prototype.some.call(parents, isExternal);
+}
+
+function installationError(title, message) {
+    my.result.type = "Fatal";
+    my.result.title = title;
+    my.result.message = message;
+    system.log("ezNTFS: " + message);
+    return false;
+}
+
+function checkMacFUSE() {
+    var path = "/Library/Filesystems/macfuse.fs";
+    var required = "@MACFUSE_VERSION@";
+    if (!system.files.fileExistsAtPath(path)) {
+        var download = "https://github.com/macfuse/macfuse/releases/tag/macfuse-" + required;
+        return installationError(system.localizedString("macFUSE.missingTitle"),
+            system.localizedString("macFUSE.missingMessage")
+                .replace("{required}", required).replace("{download}", download));
+    }
+
+    var info;
+    try {
+        info = system.files.plistAtPath(path + "/Contents/Info.plist");
+    } catch (error) {
+        system.log("ezNTFS: Cannot read the macFUSE bundle information.");
+    }
+    var installed = info && info["CFBundleShortVersionString"];
+    if (typeof installed !== "string" || !installed) {
+        return installationError(system.localizedString("macFUSE.incompleteTitle"),
+            system.localizedString("macFUSE.incompleteMessage").replace("{required}", required));
+    }
+    if (installed !== required) {
+        return installationError(system.localizedString("macFUSE.incompatibleTitle"),
+            system.localizedString("macFUSE.incompatibleMessage")
+                .replace("{installed}", installed).replace(/\{required\}/g, required));
+    }
+    if (!system.files.fileExistsAtPath(path + "/Contents/Resources/mount_macfuse") ||
+        !system.files.fileExistsAtPath(path + "/Contents/Frameworks/MFMount.framework/Versions/A/MFMount") ||
+        !system.files.fileExistsAtPath("/usr/local/lib/libfuse.2.dylib")) {
+        return installationError(system.localizedString("macFUSE.incompleteTitle"),
+            system.localizedString("macFUSE.incompleteMessage").replace("{required}", required));
+    }
+    return true;
 }
 
 function checkDriverUsage() {
@@ -30,11 +73,8 @@ function checkDriverUsage() {
         return true;
     }
 
-    my.result.type = "Fatal";
-    my.result.title = system.localizedString("externalDisks.title");
-    my.result.message = system.localizedString("externalDisks.message");
-    system.log("ezNTFS: " + my.result.message);
-    return false;
+    return installationError(system.localizedString("externalDisks.title"),
+        system.localizedString("externalDisks.message"));
 }
   ]]></script>
   <choices-outline>

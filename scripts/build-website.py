@@ -30,6 +30,7 @@ release = f"{REPO}/releases/tag/v{version}"
 assets = f"{REPO}/releases/download/v{version}"
 download = f"{assets}/ezNTFS-{version}-arm64.pkg"
 checksum = f"{assets}/SHA256SUMS.txt"
+macfuse = f"https://github.com/macfuse/macfuse/releases/tag/macfuse-{data['macFUSE']}"
 template = Template((SOURCE / "index.template.html").read_text(encoding="utf-8"))
 css = (SOURCE / "styles.css").read_bytes()
 files = {
@@ -107,6 +108,8 @@ def render(lang, copy):
             "workflow_cards": "\n        ".join(cards), "questions": "\n      ".join(question_html),
             "install_title": text["installTitle"], "sign_title": text["signTitle"],
             "signing": text["signing"].format(version=version), "macfuse_link": text["macfuseLink"],
+            "macfuse_missing": text["macfuseMissing"],
+            "macfuse_once": text["macfuseOnce"].format(fuse=data["macFUSE"]), "macfuse_url": macfuse,
             "install_steps": "\n            ".join(f"<li>{escape(step)}</li>" for step in steps),
         }
     )
@@ -115,6 +118,8 @@ def render(lang, copy):
         *[f"- **{title}** — {body}" for title, body in copy["workflow"]],
         "", f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
         "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
+        copy["macfuseOnce"].format(fuse=data["macFUSE"]),
+        f'[{copy["macfuseLink"]}]({macfuse})', "",
         copy["signing"].format(version=version), "", copy["upgrade"], "",
         f'[{copy["download"]}]({download}) · [{copy["checksum"]}]({checksum}) · '
         f'[{copy["release"]}]({release})', "", f'## {copy["faq"]}', "",

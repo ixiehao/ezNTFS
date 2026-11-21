@@ -1,2 +1,8 @@
 "externalDisks.title" = "External disks are in use";
 "externalDisks.message" = "Close any files on external disks, safely eject all external disks in Finder or ezNTFS, then reopen this installer.";
+"macFUSE.missingTitle" = "Install macFUSE first";
+"macFUSE.missingMessage" = "Install macFUSE {required} once from its official release page, then reopen this installer. {download}";
+"macFUSE.incompleteTitle" = "The macFUSE installation needs repair";
+"macFUSE.incompleteMessage" = "macFUSE is present, but some required components or version information could not be read. Repair the macFUSE {required} installation, then reopen this installer.";
+"macFUSE.incompatibleTitle" = "A different macFUSE version is installed";
+"macFUSE.incompatibleMessage" = "This Mac has macFUSE {installed}. This ezNTFS package requires {required}. Use an ezNTFS package compatible with your installed version or install macFUSE {required} and try again.";

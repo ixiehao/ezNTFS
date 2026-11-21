@@ -55,7 +55,13 @@ try {
             assert(metrics.overflow <= 1, name + " " + locale + " at " + width + "px overflows");
             assert(metrics.photo > 0);
             assert.equal(metrics.css, "grid");
-            const faq = page.locator("details").first();
+            const dependency = page.locator(".depend-install");
+            const macfuseLink = dependency.locator("a");
+            assert(!(await macfuseLink.isVisible()));
+            await dependency.locator("summary").press("Enter");
+            assert(await macfuseLink.isVisible());
+            assert.match(await macfuseLink.getAttribute("href"), /^https:\/\/github\.com\/macfuse\/macfuse\/releases\/tag\/macfuse-[\d.]+$/);
+            const faq = page.locator("#faq details").first();
             await faq.locator("summary").press("Enter");
             assert(await faq.locator("p").isVisible());
             if (process.env.EZNTFS_SCREENSHOT && name === "chromium" && locale === "en" && width === 1440) {

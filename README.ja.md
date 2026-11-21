@@ -9,7 +9,7 @@ ezNTFS は、macOS で外付け NTFS ディスクを読み書きするための�
 ## 動作環境
 
 - macOS 14 以降を搭載した Apple Silicon Mac。
-- 公式インストーラからインストールした [macFUSE 5.5.0](https://macfuse.github.io/)。
+- macFUSE 5.5.0 がインストール済みなら、ezNTFS の PKG をそのまま実行できます。未インストールの場合は、[macFUSE 5.5.0 の公式リリース](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)から Mac ごとに初回のみインストールしてください。
 - ezNTFS の PKG からアプリ、マウントサービス、NTFS-3G ドライバをインストールするための管理者権限。
 - 0.5.0 のアプリと同梱の実行ファイルは ad-hoc 署名済みです。PKG は未署名で、Apple の公証は受けていません。リリースページに SHA-256 チェックサムがあります。
 

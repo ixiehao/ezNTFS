@@ -22,6 +22,8 @@ jobs:
           swift --version
       - name: Validate localization
         run: python3 scripts/check-localizations.py
+      - name: Test installer preflight
+        run: node --test scripts/check-installer.mjs
       - name: Test (NTFS image integration requires macFUSE and runs separately)
         run: swift test
       - name: Build release

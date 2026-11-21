@@ -1,2 +1,8 @@
 "externalDisks.title" = "外付けディスクは使用中です";
 "externalDisks.message" = "外付けディスク上のファイルを閉じ、Finder または ezNTFS ですべての外付けディスクを安全に取り出してから、このインストーラを開き直してください。";
+"macFUSE.missingTitle" = "先に macFUSE をインストールしてください";
+"macFUSE.missingMessage" = "公式リリースページから macFUSE {required} を初回のみインストールし、このインストーラを開き直してください。{download}";
+"macFUSE.incompleteTitle" = "macFUSE の修復が必要です";
+"macFUSE.incompleteMessage" = "macFUSE はインストールされていますが、必要なコンポーネントやバージョン情報を確認できません。macFUSE {required} を修復してから、このインストーラを開き直してください。";
+"macFUSE.incompatibleTitle" = "macFUSE のバージョンが対応範囲外です";
+"macFUSE.incompatibleMessage" = "この Mac には macFUSE {installed} がインストールされています。この ezNTFS パッケージには {required} が必要です。対応する ezNTFS パッケージを使うか、macFUSE {required} をインストールしてからやり直してください。";

@@ -10,6 +10,7 @@ APP = ROOT / "Sources/EzNTFSApp"
 INSTALLER = ROOT / "scripts/installer"
 LANGUAGES = {"en", "zh-Hans", "ja"}
 PLACEHOLDER = re.compile(r"%(?:(\d+)\$)?@")
+INSTALLER_TOKEN = re.compile(r"\{[a-z]+\}")
 
 
 def check_catalogs(root, filename):
@@ -30,7 +31,8 @@ def check_catalogs(root, filename):
         if strings.keys() != english.keys():
             raise SystemExit(f"{language}/{filename}: key mismatch {sorted(strings.keys() ^ english.keys())}")
         for key, value in strings.items():
-            if sorted(PLACEHOLDER.findall(value)) != sorted(PLACEHOLDER.findall(english[key])):
+            if (sorted(PLACEHOLDER.findall(value)) != sorted(PLACEHOLDER.findall(english[key]))
+                    or sorted(INSTALLER_TOKEN.findall(value)) != sorted(INSTALLER_TOKEN.findall(english[key]))):
                 raise SystemExit(f"{language}/{filename}: format argument mismatch for {key}")
             if "%" in PLACEHOLDER.sub("", value):
                 raise SystemExit(f"{language}/{filename}: unexpected format in {key}")

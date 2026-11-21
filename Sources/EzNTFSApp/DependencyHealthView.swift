@@ -43,7 +43,7 @@ struct DependencyHealthView: View {
                     }
                     .font(.callout)
                 }
-                if report.macFUSE.path == nil {
+                if report.macFUSE == .missing && !model.checkingDependencies {
                     Button(language.text("health.fuseWebsite")) { openURL(Dependencies.macFUSEWebsite) }
                 }
                 if report.service == .missing {
