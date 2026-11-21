@@ -48,13 +48,29 @@ try {
             assert(await page.locator("h1").isVisible());
             assert.equal(await page.locator(".workflow article").count(), 3);
             assert.equal(await page.locator(".installation li").count(), 3);
+            await page.locator('.hero-actions a[href="#download"]').click();
+            assert.equal(page.url(), base + path + "#download");
+            assert.equal(await page.locator("#download .download-card").count(), 2);
             const pkg = await page.locator("[data-download]").getAttribute("href");
-            assert.match(pkg, /^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v[\d.]+\/ezNTFS-[\d.]+-arm64\.pkg$/);
+            const stable = pkg.match(/^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v([\d.]+)\/ezNTFS-\1-arm64\.pkg$/);
+            assert(stable);
             const app = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
             const preview = page.locator("[data-intel-preview]");
             assert(await preview.isVisible());
-            assert.match(await preview.getAttribute("href"), /^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/tag\/v[\d.]+-intel\.\d+$/);
+            const intel = (await preview.getAttribute("href")).match(/^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v([\d.]+-intel\.\d+)\/ezNTFS-\1-x86_64\.pkg$/);
+            assert(intel);
+            assert.equal(await page.locator("[data-intel-release]").getAttribute("href"),
+              `https://github.com/ixiehao/ezNTFS/releases/tag/v${intel[1]}`);
+            assert.equal(app.softwareVersion, stable[1]);
             assert.match(app.operatingSystem, /Apple Silicon/);
+            const screenshotLanguage = locale === "zh-CN" ? "zh-Hans" : locale;
+            for (const step of ["mount", "copy", "eject"]) {
+              const screenshot = page.locator(`.step-shot img[src$="/guide/${step}-${screenshotLanguage}.png"]`);
+              await screenshot.scrollIntoViewIfNeeded();
+              await screenshot.evaluate((img) => img.decode());
+              assert(await screenshot.getAttribute("alt"));
+              assert.equal(await screenshot.locator("..").getAttribute("href"), await screenshot.getAttribute("src"));
+            }
             const description = await page.locator('meta[name="description"]').getAttribute("content");
             assert.match(description, /NTFS/);
             assert.equal(await page.locator('meta[property="og:title"]').getAttribute("content"), await page.title());

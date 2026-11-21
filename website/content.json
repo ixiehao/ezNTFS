@@ -12,7 +12,7 @@
       "description": "ezNTFS is a free, open-source NTFS tool for macOS. Write to NTFS external drives in Finder without reformatting. Intel Mac preview available.",
       "skip": "Skip to content",
       "language": "Language",
-      "features": "How it works",
+      "features": "Illustrated guide",
       "install": "Install",
       "download": "Download for Apple silicon",
       "release": "Release notes",
@@ -28,19 +28,22 @@
       "intro": "Free and open source. Read and write NTFS external drives right in Finder, without reformatting.",
       "screenshotAlt": "ezNTFS window showing three external NTFS disks, individual mount states, and controls for auto mount, copying, and ejection",
       "screenshotLabel": "ezNTFS shown with simulated drives.",
-      "workflowTitle": "Use your NTFS drive on Mac",
+      "workflowTitle": "Read and write an NTFS drive on Mac",
       "workflow": [
         [
-          "Mount",
-          "Choose Mount Read-Write. Turn on Auto Mount for drives you use often."
+          "Mount for read and write",
+          "Connect your NTFS drive and click Mount Read-Write. Wait for the status to show Read-Write.",
+          "An NTFS drive marked Read-Only with the Mount Read-Write button in ezNTFS"
         ],
         [
-          "Copy",
-          "Copy and save files in Finder. Use Copy & Verify to check each copy with SHA-256."
+          "Copy files in Finder",
+          "Click Open in Finder, then copy files to the drive. For important files, Copy & Verify checks the copies with SHA-256.",
+          "Read-Write status, Open in Finder and Copy & Verify buttons, and a sample verification result"
         ],
         [
-          "Eject",
-          "Close files on the drive, then choose Safely Eject."
+          "Eject safely",
+          "Close files on the drive and click Safely Eject. Disconnect the cable after ezNTFS confirms the eject.",
+          "The ezNTFS confirmation shows that the disk is safely ejected and can be disconnected"
         ]
       ],
       "installTitle": "Install ezNTFS",
@@ -79,8 +82,15 @@
       "license": "MIT licensed",
       "macfuseMissing": "Haven’t installed macFUSE?",
       "macfuseOnce": "Install macFUSE {fuse} once, then reopen the ezNTFS installer. You can reuse it when upgrading ezNTFS.",
-      "intelPreviewNote": "Intel Mac support is in preview.",
-      "intelPreviewLink": "Try the Intel preview"
+      "intelPreviewNote": "Intel Mac support is in testing. Feedback is welcome.",
+      "intelPreviewLink": "Download the Intel preview",
+      "downloadNav": "Download",
+      "downloadTitle": "Download ezNTFS",
+      "downloadChoose": "Choose your download",
+      "stableChip": "Apple silicon",
+      "stableLabel": "Stable",
+      "previewLabel": "Preview",
+      "guideNote": "These screenshots use a demo NTFS drive."
     },
     "zh-Hans": {
       "name": "简体中文",
@@ -89,7 +99,7 @@
       "description": "免费开源的 macOS NTFS 读写工具。无需格式化，在访达中直接写入 NTFS 移动硬盘。Apple 芯片版可下载，Intel Mac 可试用预览版。",
       "skip": "跳到正文",
       "language": "语言",
-      "features": "用法",
+      "features": "图文上手",
       "install": "安装",
       "download": "下载 Apple 芯片版",
       "release": "发布说明",
@@ -105,19 +115,22 @@
       "intro": "极致好用的 macOS NTFS 读写工具，免费开源。无需格式化，在访达里直接写入移动硬盘。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
       "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
-      "workflowTitle": "使用 NTFS 移动硬盘",
+      "workflowTitle": "在 Mac 上使用 NTFS 移动硬盘",
       "workflow": [
         [
-          "挂载",
-          "点「挂载读写」。常用硬盘可开启「自动挂载」。"
+          "挂载读写",
+          "插入 NTFS 硬盘，点「挂载读写」，等状态变为「可读写」。",
+          "ezNTFS 中的模拟 NTFS 硬盘显示「只读」，卡片上有蓝色「挂载读写」按钮"
         ],
         [
-          "复制",
-          "在访达中复制和保存文件。用「复制并校验」逐个核对副本的 SHA-256。"
+          "在访达中复制文件",
+          "点「在访达中打开」，把文件复制到硬盘。重要文件可用「复制并校验」核对 SHA-256。",
+          "硬盘显示「可读写」，可点击「在访达中打开」或「复制并校验」，下方是示例校验结果"
         ],
         [
-          "弹出",
-          "关闭盘上正在使用的文件，再点「安全弹出」。"
+          "安全弹出",
+          "关闭盘上正在使用的文件，点「安全弹出」。看到弹出成功的提示后，再拔掉连接线。",
+          "ezNTFS 显示「硬盘已安全弹出」，提示现在可以拔下硬盘"
         ]
       ],
       "installTitle": "安装 ezNTFS",
@@ -156,8 +169,15 @@
       "license": "MIT 开源许可证",
       "macfuseMissing": "这台 Mac 还没装 macFUSE？",
       "macfuseOnce": "macFUSE {fuse} 只需安装一次。装好后重新打开 ezNTFS 安装包，升级时可继续使用。",
-      "intelPreviewNote": "Intel Mac 正式支持正在准备中。",
-      "intelPreviewLink": "试用 Intel 预览版"
+      "intelPreviewNote": "Intel Mac 正式支持正在准备中，欢迎试用和反馈。",
+      "intelPreviewLink": "下载 Intel 预览版",
+      "downloadNav": "下载",
+      "downloadTitle": "下载 ezNTFS",
+      "downloadChoose": "选择下载版本",
+      "stableChip": "Apple 芯片",
+      "stableLabel": "正式版",
+      "previewLabel": "预览版",
+      "guideNote": "下方截图使用模拟的 NTFS 硬盘。"
     },
     "ja": {
       "name": "日本語",
@@ -166,7 +186,7 @@
       "description": "ezNTFS は無料のオープンソース NTFS ツールです。フォーマットせずに Mac の Finder で外付け NTFS ドライブに書き込めます。Intel Mac 向けプレビューも公開中。",
       "skip": "本文へ移動",
       "language": "言語",
-      "features": "使い方",
+      "features": "図解ガイド",
       "install": "インストール",
       "download": "Apple シリコン版をダウンロード",
       "release": "リリース情報",
@@ -182,19 +202,22 @@
       "intro": "無料で使えるオープンソースアプリ。フォーマットせずに、外付け NTFS ドライブを Finder で読み書きできます。",
       "screenshotAlt": "3 台の外付け NTFS ディスクとマウント状態、自動マウント、コピー、取り出しを表示する ezNTFS のウインドウ",
       "screenshotLabel": "ezNTFS の画面。ディスクはデモ用です。",
-      "workflowTitle": "外付け NTFS ドライブを使う",
+      "workflowTitle": "Mac で外付け NTFS ドライブを使う",
       "workflow": [
         [
-          "マウント",
-          "「読み書きでマウント」を選びます。よく使うドライブは自動マウントに設定できます。"
+          "読み書きでマウント",
+          "NTFS ドライブを接続し、「読み書きでマウント」を選びます。表示が「読み書き可」に切り替わるまで待ちます。",
+          "読み取り専用の NTFS ドライブと「読み書きでマウント」ボタン"
         ],
         [
-          "コピー",
-          "Finder でファイルをコピーできます。「コピーして検証」では各ファイルの SHA-256 を照合します。"
+          "Finder でファイルをコピー",
+          "「Finder で開く」を選び、ファイルをドライブにコピーします。「コピーして検証」では SHA-256 を照合できます。",
+          "読み書きできるドライブの操作ボタンと、コピーを検証した結果の例"
         ],
         [
-          "取り出し",
-          "ドライブ上のファイルを閉じて「安全に取り出す」を選びます。"
+          "安全に取り出す",
+          "ドライブ上のファイルを閉じ、「安全に取り出す」を選びます。完了メッセージを確認してからケーブルを外してください。",
+          "安全に取り出せたことと、接続を解除できることを示す ezNTFS の画面"
         ]
       ],
       "installTitle": "ezNTFS をインストール",
@@ -233,8 +256,15 @@
       "license": "MIT ライセンス",
       "macfuseMissing": "macFUSE をまだインストールしていない場合",
       "macfuseOnce": "macFUSE {fuse} を初回にインストールし、ezNTFS のインストーラを開き直します。ezNTFS の更新時もそのまま使えます。",
-      "intelPreviewNote": "Intel Mac の正式対応に向けて準備中です。",
-      "intelPreviewLink": "Intel 版プレビューを試す"
+      "intelPreviewNote": "Intel Mac の正式対応に向けて準備中です。お試しとフィードバックを歓迎します。",
+      "intelPreviewLink": "Intel プレビューをダウンロード",
+      "downloadNav": "ダウンロード",
+      "downloadTitle": "ezNTFS をダウンロード",
+      "downloadChoose": "ダウンロードを選ぶ",
+      "stableChip": "Apple シリコン",
+      "stableLabel": "正式版",
+      "previewLabel": "プレビュー",
+      "guideNote": "以下の画面にはデモ用の NTFS ドライブを使用しています。"
     }
   }
 }

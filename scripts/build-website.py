@@ -16,7 +16,7 @@ SOURCE = ROOT / "website"
 SITE = "https://ixiehao.github.io/ezNTFS/"
 REPO = "https://github.com/ixiehao/ezNTFS"
 LANG_TAGS = {"en": "en", "zh-Hans": "zh-CN", "ja": "ja"}
-COPY_ICONS = ("plug-connected", "copy", "player-eject")
+WORKFLOW = (("mount", "plug-connected", 206), ("copy", "copy", 280), ("eject", "player-eject", 124))
 
 data = json.loads((SOURCE / "content.json").read_text(encoding="utf-8"))
 languages = data["languages"]
@@ -33,6 +33,7 @@ if not re.fullmatch(r"\d+\.\d+\.\d+-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*", intel_pr
 last_modified = date.fromisoformat(data["lastModified"]).isoformat()
 release = f"{REPO}/releases/tag/v{version}"
 intel_preview = f"{REPO}/releases/tag/v{intel_preview_version}"
+intel_download = f"{REPO}/releases/download/v{intel_preview_version}/ezNTFS-{intel_preview_version}-x86_64.pkg"
 assets = f"{REPO}/releases/download/v{version}"
 download = f"{assets}/ezNTFS-{version}-arm64.pkg"
 checksum = f"{assets}/SHA256SUMS.txt"
@@ -86,10 +87,22 @@ def render(lang, copy):
         "license": f"{REPO}/blob/main/LICENSE",
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     }
-    cards = [
-        f'<article><span class="card-icon">{icon(name)}</span><h3>{escape(title)}</h3><p>{escape(body)}</p></article>'
-        for name, (title, body) in zip(COPY_ICONS, copy["workflow"])
-    ]
+    prefix = ".." if copy["directory"] else "."
+    if len(copy["workflow"]) != len(WORKFLOW):
+        raise SystemExit(f"Expected {len(WORKFLOW)} workflow steps for {lang}.")
+    workflow_steps = []
+    workflow_markdown = []
+    for (step, icon_name, height), (title, body, alt) in zip(WORKFLOW, copy["workflow"]):
+        image_path = f"assets/guide/{step}-{lang}.png"
+        files[image_path] = (SOURCE / image_path).read_bytes()
+        image_url = f"{prefix}/{image_path}"
+        workflow_steps.append(
+            f'<article class="workflow-step"><div><h3><span class="card-icon">{icon(icon_name)}</span>'
+            f'{escape(title)}</h3><p>{escape(body)}</p></div>'
+            f'<a class="step-shot" href="{image_url}"><img src="{image_url}" width="600" height="{height}"'
+            f' alt="{escape(alt)}" loading="lazy" decoding="async"></a></article>'
+        )
+        workflow_markdown.extend([f'### {title}', "", body, "", f'![{alt}]({image_url})', ""])
     question_html = [
         f"<details><summary>{escape(question)}</summary><p>{escape(answer)}</p></details>"
         for question, answer in copy["questions"]
@@ -101,7 +114,7 @@ def render(lang, copy):
         **{
             **text,
             "lang": LANG_TAGS[lang], "canonical": canonical(lang),
-            "prefix": ".." if copy["directory"] else ".", "alternates": alternate_links(),
+            "prefix": prefix, "alternates": alternate_links(),
             "language_links": language_links(lang), "share_image": SITE + screenshot,
             "screenshot": screenshot, "screenshot_alt": text["screenshotAlt"],
             "screenshot_label": text["screenshotLabel"],
@@ -110,9 +123,10 @@ def render(lang, copy):
             "requirements": text["requirements"].format(macos=data["minimumMacOS"]),
             "heading_first": escape(heading_first), "heading_second": escape(heading_second),
             "release_url": release, "download_url": download, "checksum_url": checksum,
-            "intel_preview_url": intel_preview,
+            "intel_preview_url": intel_preview, "intel_download_url": intel_download,
+            "intel_preview_version": intel_preview_version,
             "workflow_title": text["workflowTitle"],
-            "workflow_cards": "\n        ".join(cards), "questions": "\n      ".join(question_html),
+            "workflow_steps": "\n        ".join(workflow_steps), "questions": "\n      ".join(question_html),
             "install_title": text["installTitle"], "sign_title": text["signTitle"],
             "macfuse_link": text["macfuseLink"],
             "macfuse_missing": text["macfuseMissing"],
@@ -121,16 +135,19 @@ def render(lang, copy):
         }
     )
     markdown = [
-        f'# {copy["title"]}', "", copy["intro"], "", f'## {copy["workflowTitle"]}', "",
-        *[f"- **{title}** — {body}" for title, body in copy["workflow"]],
-        "", f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
+        f'# {copy["title"]}', "", copy["intro"], "", f'## {copy["downloadTitle"]}', "",
+        f'- {copy["stableChip"]} · {copy["stableLabel"]} · v{version} · '
+        f'[{copy["download"]}]({download}) · [{copy["release"]}]({release})',
+        f'- Intel Mac · {copy["previewLabel"]} · v{intel_preview_version} · '
+        f'[{copy["intelPreviewLink"]}]({intel_download}) · [{copy["release"]}]({intel_preview})',
+        "", copy["intelPreviewNote"], "", f'## {copy["workflowTitle"]}', "", copy["guideNote"], "",
+        *workflow_markdown,
+        f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
         "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
         copy["macfuseOnce"].format(fuse=data["macFUSE"]),
         f'[{copy["macfuseLink"]}]({macfuse})', "",
         copy["signing"], "", copy["upgrade"], "",
-        f'[{copy["download"]}]({download}) · [{copy["checksum"]}]({checksum}) · '
-        f'[{copy["release"]}]({release})', "",
-        f'{copy["intelPreviewNote"]} [{copy["intelPreviewLink"]}]({intel_preview})',
+        f'[{copy["checksum"]}]({checksum})',
         "", f'## {copy["faq"]}', "",
         *[f"**{question}**  \n{answer}\n" for question, answer in copy["questions"]],
     ]
