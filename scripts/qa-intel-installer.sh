@@ -19,7 +19,8 @@ prepare() {
     mkdir "$work"
     curl -fLSs --retry 3 https://github.com/macfuse/macfuse/releases/download/macfuse-5.5.0/macfuse-5.5.0.dmg -o "$work/macfuse.dmg"
     printf '%s  %s\n' "$vendor_hash" "$work/macfuse.dmg" | shasum -a 256 -c
-    curl -fLSs --retry 3 https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2026.9.28.tgz -o "$archive"
+    # The 0.5.1 release mirrors the unmodified upstream archive and checksum.
+    curl -fLSs --retry 3 https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ntfs-3g-2026.9.28.tgz -o "$archive"
     printf '%s  %s\n' "$ntfs_hash" "$archive" | shasum -a 256 -c
     mountpoint="$work/macfuse"
     /usr/bin/hdiutil attach -nobrowse -readonly -mountpoint "$mountpoint" "$work/macfuse.dmg"
