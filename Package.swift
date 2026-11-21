@@ -11,7 +11,8 @@ let package = Package(
         .executable(name: "ezntfs-service", targets: ["EzNTFSService"]),
     ],
     targets: [
-        .target(name: "EzNTFSCore"),
+        .systemLibrary(name: "CRemoveFile"),
+        .target(name: "EzNTFSCore", dependencies: ["CRemoveFile"]),
         .executableTarget(name: "EzNTFSApp", dependencies: ["EzNTFSCore"], resources: [.process("Resources")]),
         .executableTarget(name: "EzNTFSCLI", dependencies: ["EzNTFSCore"]),
         .executableTarget(name: "EzNTFSService", dependencies: ["EzNTFSCore"]),

@@ -1,3 +1,4 @@
+import CRemoveFile
 import CryptoKit
 import Darwin
 import Foundation
@@ -95,7 +96,7 @@ public enum VerifiedCopy {
         var committed = false
         defer {
             if !committed, sameDirectory(stageFD, at: parentFD, path: staging) {
-                _ = removefileat(parentFD, staging, nil, removefile_flags_t(REMOVEFILE_RECURSIVE))
+                ezntfs_remove_partial_directory(parentFD, staging)
             }
             _ = close(stageFD)
         }
