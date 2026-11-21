@@ -23,9 +23,13 @@ for (const lang of ["en", "zh-Hans", "ja"]) {
     fileURLToPath(new URL("Resources/" + lang + ".lproj/Localizable.strings", installer)),
   ], { encoding: "utf8" }));
 
-  function preflight({ files, version, unreadable = false, busy = false }) {
+  function preflight({ files, version, unreadable = false, busy = false, architecture = "arm64", hostArm64 = 1 }) {
     const my = { result: {} };
     const system = {
+      sysctl(name) {
+        assert.equal(name, "hw.optional.arm64");
+        return hostArm64;
+      },
       files: {
         fileExistsAtPath: (name) => files.includes(name),
         plistAtPath(name) {
@@ -44,12 +48,25 @@ for (const lang of ["en", "zh-Hans", "ja"]) {
       localizedString: (key) => catalog[key],
       log() {},
     };
-    const allowed = runInNewContext(program + "\n" + check, { my, system });
+    const allowed = runInNewContext(program.replaceAll("@ARCHITECTURE@", architecture) + "\n" + check, { my, system });
     return { allowed, ...my.result };
   }
 
   test(lang + " compatible install skips the download prompt", () => {
     assert.deepEqual(preflight({ files: [path, ...components], version: "5.5.0" }), { allowed: true });
+    assert.deepEqual(preflight({
+      files: [path, ...components], version: "5.5.0", architecture: "x86_64", hostArm64: null,
+    }), { allowed: true });
+  });
+
+  test(lang + " rejects a package for the other architecture before checking macFUSE", () => {
+    for (const [architecture, hostArm64, expected] of [["arm64", null, "x86_64"], ["x86_64", 1, "arm64"]]) {
+      const outcome = preflight({ files: [], architecture, hostArm64 });
+      assert.equal(outcome.allowed, false);
+      assert.equal(outcome.type, "Fatal");
+      assert.equal(outcome.title, catalog["architecture.title"]);
+      assert(outcome.message.includes(expected));
+    }
   });
 
   test(lang + " absent macFUSE gives the pinned official release link", () => {

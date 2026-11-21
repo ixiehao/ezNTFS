@@ -3,13 +3,19 @@ set -euo pipefail
 
 cd -- "${0:A:h:h}"
 project="$(pwd -P)"
-build_root="${EZNTFS_BUILD_ROOT:-$project/.build}"
+architecture="${EZNTFS_ARCHITECTURE:-$(/usr/bin/uname -m)}"
+[[ "$architecture" == arm64 || "$architecture" == x86_64 ]] || {
+  print -u2 -- "Unsupported ezNTFS architecture: $architecture"
+  exit 2
+}
+build_root="${EZNTFS_BUILD_ROOT:-$project/.build/package-$architecture}"
 mkdir -p -- "$build_root"
 cache="$build_root/module-cache"
 mkdir -p -- "$cache" "$build_root/swiftpm-cache" "$build_root/swiftpm-config" "$build_root/swiftpm-security"
 export CLANG_MODULE_CACHE_PATH="$cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$cache"
-swift_options=(--scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
+swift_options=(--triple "$architecture-apple-macosx14.0"
+               --scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
                --config-path "$build_root/swiftpm-config" --security-path "$build_root/swiftpm-security")
 if [[ "${EZNTFS_SWIFTPM_DISABLE_SANDBOX:-0}" == 1 ]]; then
   swift_options+=(--disable-sandbox)
@@ -18,7 +24,6 @@ fi
 /usr/bin/swift build "${swift_options[@]}" --configuration release -debug-info-format none
 binaries="$(/usr/bin/swift build "${swift_options[@]}" --configuration release -debug-info-format none --show-bin-path)"
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-architecture="$(/usr/bin/uname -m)"
 output="$project/dist/ezNTFS-$version-$architecture"
 destination="$output/ezNTFS.app"
 if [[ -L "$project/dist" || -L "$output" || -e "$destination" || -L "$destination" ]]; then
@@ -57,6 +62,8 @@ done
 /usr/bin/install -m 644 Resources/Info.plist "$app/Contents/Info.plist"
 /usr/bin/install -m 755 "$binaries/ezNTFS" "$app/Contents/MacOS/ezNTFS"
 /usr/bin/install -m 755 "$binaries/ezntfs-tool" "$app/Contents/MacOS/ezntfs-tool"
+[[ "$(/usr/bin/lipo -archs "$app/Contents/MacOS/ezNTFS")" == "$architecture" ]]
+[[ "$(/usr/bin/lipo -archs "$app/Contents/MacOS/ezntfs-tool")" == "$architecture" ]]
 if [[ -n "${EZNTFS_DRIVER_REPAIR_PKG:-}" ]]; then
   /usr/bin/install -m 644 "$EZNTFS_DRIVER_REPAIR_PKG" "$resources/ezNTFS-Driver.pkg"
 fi

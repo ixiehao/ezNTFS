@@ -3,6 +3,12 @@ set -eu
 
 . "$(dirname "$0")/settings"
 [ "$3" = "/" ] || { echo "请选择当前启动盘。" >&2; exit 1; }
+if /usr/bin/arch -arm64 /usr/bin/true >/dev/null 2>&1; then
+    host_architecture=arm64
+else
+    host_architecture=x86_64
+fi
+[ "$architecture" = "$host_architecture" ] || { echo "Use the ezNTFS installer for $host_architecture." >&2; exit 1; }
 fuse=/Library/Filesystems/macfuse.fs
 service_signer='anchor apple generic and certificate leaf[subject.OU] = "3T5GSNBU6W"'
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$fuse/Contents/Info.plist") || exit 1

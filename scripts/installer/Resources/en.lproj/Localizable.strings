@@ -1,3 +1,5 @@
+"architecture.title" = "This package is for a different Mac architecture";
+"architecture.message" = "Open the ezNTFS installer for this Mac ({architecture}).";
 "externalDisks.title" = "External disks are in use";
 "externalDisks.message" = "Close any files on external disks, safely eject all external disks in Finder or ezNTFS, then reopen this installer.";
 "macFUSE.missingTitle" = "Install macFUSE first";

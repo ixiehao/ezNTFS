@@ -1,3 +1,5 @@
+"architecture.title" = "此安装包不适用于这台 Mac";
+"architecture.message" = "请打开适用于这台 Mac 的 ezNTFS 安装包（{architecture}）。";
 "externalDisks.title" = "移动硬盘正在使用";
 "externalDisks.message" = "请先关闭移动硬盘上的文件，在访达或 ezNTFS 中安全弹出所有移动硬盘，然后重新运行此安装包。";
 "macFUSE.missingTitle" = "请先安装 macFUSE";
