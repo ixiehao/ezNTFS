@@ -2,7 +2,7 @@
 
 ## 环境
 
-使用 Xcode 的 Swift 工具链，SwiftPM 最低系统版本为 macOS 14。本次安装包基于 NTFS-3G 2026.9.28 和 macFUSE 5.5.0。构建需预装官方 macFUSE，安装时会校验本机 macFUSE 签名、版本和动态库摘要。
+CI 使用 Xcode 26.3 的 Swift 工具链，SwiftPM 最低运行版本为 macOS 14。本次安装包基于 NTFS-3G 2026.9.28 和 macFUSE 5.5.0。构建需预装官方 macFUSE，安装时会校验本机 macFUSE 签名、版本和动态库摘要。
 
 ## 构建
 
