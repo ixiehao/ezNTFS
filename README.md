@@ -2,36 +2,38 @@
 
 English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-ezNTFS is a free, open-source tool for writing to NTFS external hard drives on Mac. It uses NTFS-3G and macFUSE so you can copy files in Finder without reformatting the drive. It also supports per-disk auto mount, safe ejection, and copying with SHA-256 verification.
+Read and write NTFS external drives in Finder, with the drive’s existing format intact. ezNTFS is free and open source. It uses NTFS-3G and macFUSE.
 
-[Official website](https://ixiehao.github.io/ezNTFS/) · [Download 0.5.2 for Apple Silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
+[Download 0.5.2 for Apple Silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel preview](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [Website](https://ixiehao.github.io/ezNTFS/)
 
-## Requirements
+<img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three example NTFS drives and their mount status">
 
-- Apple Silicon Mac running macOS 14 or later.
-- The ezNTFS installer automatically checks for macFUSE 5.5.0. If it’s already installed, continue with ezNTFS. If it’s missing, install it once per Mac from the [official macFUSE 5.5.0 release](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0).
-- Administrator approval to install the app, system mount service, and NTFS-3G driver from the ezNTFS PKG.
-- The app and bundled executables use ad-hoc signing. The PKG is unsigned and not notarized. The release page includes SHA-256 checksums.
+## Install
 
-<img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three demo NTFS disks and their mount states">
+The stable release requires an Apple Silicon Mac with macOS 14 or later.
+
+1. Close files on your external drives and safely eject the drives before running the installer.
+2. macFUSE 5.5.0 is a one-time install. If it’s already on your Mac, go straight to the ezNTFS PKG. [Get macFUSE 5.5.0](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)
+3. Open the ezNTFS PKG and approve installation in macOS.
+
+The app and its executables are ad-hoc signed. The PKG is unsigned and has no Apple notarization.
 
 ## Use
 
-1. Connect an external NTFS disk and choose **Mount Read-Write** on its card or in the menu bar. If another driver is managing it, unmount the volume normally first.
-2. For automatic mounting, turn on **Mount on Connection** in Settings and **Auto Mount** for the disk. Drives without a stable identifier can be mounted manually.
-3. **Copy & Verify** copies regular files and folders one at a time, then reads back each copy and checks its SHA-256 digest. The batch is delivered in a new folder after verification. It includes empty files and directories. File dates and extended attributes use the driver’s metadata support. Full macOS permissions, hard-link relationships, and special files are outside this copy mode.
-4. When finished, close files on the disk and choose **Safely Eject**. This ejects the entire physical disk and all its volumes. If macOS reports it is in use, close the windows or apps using it and retry.
-5. Closing the main window keeps ezNTFS running in the menu bar. Choose **Open ezNTFS** to bring the window back, or **Quit ezNTFS** to exit.
+- **Mount Read-Write** lets you use the drive in Finder. Unmount it first if another NTFS driver is using it.
+- For automatic mounting, turn on **Mount on Connection** in Settings and **Auto Mount** for the drive. Use manual mounting for drives without a stable identifier.
+- **Copy & Verify** checks each copy with SHA-256 and puts the batch in a new folder once it passes. It handles regular files and folders, including empty ones. Dates and extended attributes depend on driver support. Full macOS permissions, hard-link relationships and special files are outside its scope.
+- Close open files before choosing **Safely Eject**. This ejects the whole drive, including all its volumes. If it’s busy, close the windows or apps using it and retry.
 
-## Settings and troubleshooting
+Closing the window leaves ezNTFS in the menu bar. Choose **Open ezNTFS** to bring it back.
 
-- The **Language** menu and Settings share the same choices: Follow System, English, Simplified Chinese, and Japanese. The Installer and system dialogs use macOS’s language settings.
-- **Help → Check for Updates** checks GitHub for the latest public stable release. When a newer version is available, **View Release** appears as a separate item in Help and the status menu.
-- **Help → Check Dependencies** opens the same panel as **Environment Check** in Settings. It shows macFUSE, NTFS-3G, and the mount service. If macOS blocks raw disk access, use **Open Privacy Settings** and **Copy Service Path** to add the mount service to Full Disk Access. See [Privacy and permissions](docs/PRIVACY.md).
-- Before upgrading or repairing the driver, close files on your external disks, safely eject all external disks, and reopen the installer. Reconnect them after installation.
+## Help
+
+- If macOS blocks disk access, open **Help → Check Dependencies**. Use **Open Privacy Settings** and **Copy Service Path** to add the mount service to Full Disk Access. [Privacy and permissions](docs/PRIVACY.md)
+- Use **Help → Check for Updates** for the latest stable release. Choose your preferred language from the **Language** menu. [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
 
 ## Development
 
 [Documentation](docs/README.md) · [Build](docs/DEVELOPMENT.md) · [Testing](docs/QA.md) · [Releasing](docs/RELEASING.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-ezNTFS is available under the [MIT License](LICENSE). See [Third-party components](docs/THIRD_PARTY.md) for NTFS-3G, macFUSE, and Tabler Icons.
+[MIT License](LICENSE) · [Third-party components](docs/THIRD_PARTY.md)
