@@ -4,7 +4,7 @@
 
 ezNTFS 是一款免费开源的 Mac NTFS 硬盘读写工具。它通过 NTFS-3G 和 macFUSE 挂载 NTFS 移动硬盘，保留原有格式，让你在访达中写入文件。支持逐盘自动挂载、安全弹出和复制后逐文件 SHA-256 校验。
 
-[官方网站](https://ixiehao.github.io/ezNTFS/zh/) · [下载 Mac 版 0.5.1](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ezNTFS-0.5.1-arm64.pkg) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.1) · [反馈问题](https://github.com/ixiehao/ezNTFS/issues)
+[官方网站](https://ixiehao.github.io/ezNTFS/zh/) · [下载 Apple 芯片版 0.5.2](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [反馈问题](https://github.com/ixiehao/ezNTFS/issues)
 
 ## 安装要求
 

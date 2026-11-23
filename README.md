@@ -4,7 +4,7 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 ezNTFS is a free, open-source tool for writing to NTFS external hard drives on Mac. It uses NTFS-3G and macFUSE so you can copy files in Finder without reformatting the drive. It also supports per-disk auto mount, safe ejection, and copying with SHA-256 verification.
 
-[Official website](https://ixiehao.github.io/ezNTFS/) · [Download 0.5.1 for Mac](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.1/ezNTFS-0.5.1-arm64.pkg) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.1) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
+[Official website](https://ixiehao.github.io/ezNTFS/) · [Download 0.5.2 for Apple Silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
 
 ## Requirements
 
