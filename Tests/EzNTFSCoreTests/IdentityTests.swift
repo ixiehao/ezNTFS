@@ -65,6 +65,49 @@ struct IdentityTests {
 }
 
 extension IdentityTests {
+    @Test func wakeRearmsOnlyPreviouslyWritablePartitions() {
+        let unmounted = volume(paired, connection: 10, disk: "disk4")
+        let mounted = ExternalVolume(
+            connection: unmounted.connection, deviceConnection: unmounted.deviceConnection, fingerprint: paired,
+            partition: unmounted.partition, wholeDisk: unmounted.wholeDisk, name: unmounted.name,
+            mount: VolumeMount(path: "/Volumes/Fixture", kind: "macfuse", readOnly: false), fileSystemConfirmed: true
+        )
+        let failed = volume(paired, connection: 11, disk: "disk5")
+        let attempts = Disks.mountAttemptsAfterWake([10, 11, 12], disksBeforeSleep: [mounted, failed])
+        #expect(attempts == [11, 12])
+        #expect(Disks.automaticCandidates([unmounted], remembered: [paired], attempted: attempts) == [unmounted])
+        #expect(Disks.automaticCandidates([failed], remembered: [paired], attempted: attempts).isEmpty)
+    }
+
+    @Test func autoMountDoesNotConfuseDisksReconnectingThroughTheSameHub() {
+        let second = DiskFingerprint(serial: "second", vendor: paired.vendor, product: paired.product,
+                                     partitionOffset: paired.partitionOffset, partitionBytes: paired.partitionBytes)
+        let firstReconnected = volume(paired, connection: 20, disk: "disk6")
+        let secondReconnected = volume(second, connection: 21, disk: "disk4")
+        let candidates = Disks.automaticCandidates([secondReconnected, firstReconnected],
+                                                    remembered: [paired, second], attempted: [10, 11, 20])
+        #expect(candidates == [secondReconnected])
+    }
+
+    @Test func ejectWithAnOpenFileFailsWithoutForcingAndCanBeRetried() throws {
+        let target = volume(paired, connection: 10, disk: "disk4")
+        var calls = [[String]]()
+        var mounted: Set<String> = ["disk4s1", "disk4s2", "disk40s1"]
+        func tryEject(busy: Bool) throws {
+            try Disks.eject(target, confirm: { $0 }, run: { args in
+                calls.append(args)
+                if busy { throw EZError("Resource busy") }
+            }, mountedDevices: { mounted })
+        }
+        #expect(throws: EZError.self) { try tryEject(busy: true) }
+        #expect(calls.count == 1)
+        mounted.remove("disk4s1")
+        #expect(throws: EZError.self) { try tryEject(busy: false) }
+        mounted.remove("disk4s2")
+        try tryEject(busy: false)
+        #expect(calls == Array(repeating: ["eject", "/dev/disk4"], count: 3))
+    }
+
     @Test func onlyNativeReadOnlyOrUnattachedVolumesCanBeMounted() {
         let original = volume(paired, connection: 10, disk: "disk4")
         #expect(original.canMountReadWrite)

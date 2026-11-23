@@ -53,6 +53,8 @@ final class AppModel: ObservableObject {
     private var activationObserver: AnyCancellable?
     private var scheduledRefresh: Task<Void, Never>?
     private var refreshPending = false
+    private var sleeping = false
+    private var disksBeforeSleep: [ExternalVolume] = []
     private let bootSession: String?
     private var sessionAttempts: Set<UInt64> = []
     private var receiptVolume: UInt64?
@@ -174,7 +176,9 @@ final class AppModel: ObservableObject {
                     await self.checkDependencies()
                 }
             }
-        diskEvents = DiskEvents { [weak self] in self?.scheduleRefresh() }
+        diskEvents = DiskEvents(onChange: { [weak self] in self?.scheduleRefresh() },
+                                onSleep: { [weak self] in self?.prepareForSleep() },
+                                onWake: { [weak self] in self?.refreshAfterWake() })
         if diskEvents == nil {
             logger.error("Could not subscribe to macOS disk events.")
             setMessage("error.diskEvents", error: true)
@@ -193,9 +197,23 @@ final class AppModel: ObservableObject {
         }
     }
 
+    private func prepareForSleep() {
+        guard !sleeping else { return }
+        sleeping = true
+        disksBeforeSleep = disks
+        operationRevision &+= 1
+    }
+
+    private func refreshAfterWake() {
+        sessionAttempts = Disks.mountAttemptsAfterWake(sessionAttempts, disksBeforeSleep: disksBeforeSleep)
+        disksBeforeSleep.removeAll()
+        sleeping = false
+        scheduleRefresh()
+    }
+
     func refresh() async {
         guard !preview else { return }
-        guard !refreshInProgress, activity == nil else {
+        guard !sleeping, !refreshInProgress, activity == nil else {
             refreshPending = true
             return
         }
@@ -212,7 +230,7 @@ final class AppModel: ObservableObject {
         refreshInProgress = true
         defer {
             refreshInProgress = false
-            if refreshPending && activity == nil { scheduleRefresh() }
+            if refreshPending && activity == nil && !sleeping { scheduleRefresh() }
         }
         let excluded = ejectedDevices
         let known = remembered.union(disks.map(\.fingerprint))
@@ -220,7 +238,7 @@ final class AppModel: ObservableObject {
         let result = await Task.detached(priority: .utility) {
             Result { try Disks.scan(known: known, excluding: excluded) }
         }.value
-        guard activity == nil, operationRevision == revision, ejectedDevices == excluded else {
+        guard !sleeping, activity == nil, operationRevision == revision, ejectedDevices == excluded else {
             refreshPending = true
             return
         }
@@ -426,7 +444,8 @@ final class AppModel: ObservableObject {
     func eject(diskID: UInt64) {
         guard !preview, activity == nil, let target = disks.first(where: { $0.id == diskID }) else { return }
         select(diskID)
-        sessionAttempts.insert(target.connection)
+        // If eject leaves another partition on this disk unmounted, keep it eligible for a manual retry.
+        sessionAttempts.formUnion(disks.lazy.filter { $0.deviceConnection == target.deviceConnection }.map(\.connection))
         activityVolume = target.id
         activity = .ejecting
         setMessage(InterfaceMessage("notice.ejecting", arguments: [target.name]))

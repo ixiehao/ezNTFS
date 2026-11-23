@@ -3,6 +3,7 @@ import EzNTFSCore
 import Foundation
 import Testing
 
+@Suite(.serialized)
 struct CopyImageTests {
     @Test(.enabled(if: ProcessInfo.processInfo.environment["EZNTFS_TEST_IMAGE"] != nil))
     func copyRemountAndMutationRegression() async throws {
@@ -17,10 +18,10 @@ struct CopyImageTests {
         try fs.createDirectory(at: target, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let backing = try MountedDisk.at(root.path)
         defer {
-            if let mounted = try? MountedDisk.at(target.path), mounted.path == target.path, mounted.source == image.path {
-                _ = try? Tool.run("/sbin/umount", [target.path])
-            }
-            if (try? MountedDisk.at(target.path)) == backing { try? fs.removeItem(at: root) }
+            do {
+                try unmountTestImage(image, at: target, backing: backing)
+                try fs.removeItem(at: root)
+            } catch { Issue.record("Temporary image cleanup failed at \(root.path): \(error.localizedDescription)") }
         }
         try fs.createDirectory(at: source, withIntermediateDirectories: false)
         _ = try Tool.run("/bin/cp", ["-c", fixture, image.path])
@@ -197,7 +198,7 @@ struct CopyImageTests {
         let open = try FileHandle(forReadingFrom: existing)
         #expect(throws: EZError.self) { try Tool.run("/sbin/umount", [target.path]) }
         try open.close()
-        _ = try Tool.run("/sbin/umount", [target.path])
+        try unmountTestImage(image, at: target, backing: backing)
         try attach()
         #expect(try Data(contentsOf: existing) == data)
         #expect(try Data(contentsOf: second.destination.appendingPathComponent("source/._独立文件"))
@@ -217,18 +218,18 @@ struct CopyImageTests {
         let backing = try MountedDisk.at(root.path)
         let targets = ["first", "second"].map { root.appendingPathComponent($0, isDirectory: true) }
         let images = targets.map { $0.appendingPathExtension("img") }
+        var createdMounts: [(target: URL, image: URL)] = []
         defer {
-            for (target, image) in zip(targets, images) {
-                if let mounted = try? MountedDisk.at(target.path), mounted.path == target.path, mounted.source == image.path {
-                    _ = try? Tool.run("/sbin/umount", [target.path])
+            do {
+                for (target, image) in createdMounts {
+                    try unmountTestImage(image, at: target, backing: backing)
                 }
-            }
-            if targets.allSatisfy({ !fs.fileExists(atPath: $0.path) || (try? MountedDisk.at($0.path)) == backing }) {
-                try? fs.removeItem(at: root)
-            }
+                try fs.removeItem(at: root)
+            } catch { Issue.record("Temporary image cleanup failed at \(root.path): \(error.localizedDescription)") }
         }
         for (target, image) in zip(targets, images) {
             try fs.createDirectory(at: target, withIntermediateDirectories: false)
+            createdMounts.append((target, image))
             _ = try Tool.run("/bin/cp", ["-c", fixture, image.path])
             try Mounting.mountImage(source: image.path, destination: target, label: "EZNTFS-QA", driver: driver)
         }
@@ -266,4 +267,27 @@ struct CopyImageTests {
         }
     }
 
+}
+
+func unmountTestImage(_ image: URL, at mount: URL, backing: MountedDisk) throws {
+    // macOS workers can briefly hold files open even after the test closes its handles and windows.
+    for attempt in 0...10 {
+        let observed = try MountedDisk.at(mount.path)
+        if observed == backing { return }
+        guard observed.path == mount.path, observed.source == image.path, observed.kind == "macfuse" else {
+            throw EZError("Unexpected mount identity during test image cleanup.")
+        }
+        do { _ = try Tool.run("/sbin/umount", [mount.path], queryTimeout: .seconds(2)) }
+        catch {
+            if try MountedDisk.at(mount.path) == backing { return }
+            guard attempt < 10 else { throw error }
+            Thread.sleep(forTimeInterval: 1)
+            continue
+        }
+        guard try MountedDisk.at(mount.path) == backing else {
+            throw EZError("Could not confirm the temporary image was unmounted.")
+        }
+        if attempt > 0 { print("Temporary image unmounted after retry (\(attempt)).") }
+        return
+    }
 }

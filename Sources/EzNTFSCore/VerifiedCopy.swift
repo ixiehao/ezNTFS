@@ -159,11 +159,11 @@ public enum VerifiedCopy {
         for file in verified {
             try Task.checkCancellation()
             let path = file.parts.joined(separator: "/")
-            let fd = openat(stageFD, path, O_RDONLY | O_NOFOLLOW_ANY | O_NONBLOCK)
-            guard fd >= 0 else { throw EZError("已校验的副本发生变化，副本没有交付。") }
-            let unchanged = sameFile(fd, as: file.attributes)
-            _ = close(fd)
-            guard unchanged else { throw EZError("已校验的副本发生变化，副本没有交付。") }
+            var actual = stat()
+            guard fstatat(stageFD, path, &actual, AT_SYMLINK_NOFOLLOW_ANY) == 0,
+                  sameIdentity(actual, as: file.attributes) else {
+                throw EZError("已校验的副本发生变化，副本没有交付。")
+            }
         }
         try Task.checkCancellation()
         guard try MountedDisk.at(target.path) == expectedMount,

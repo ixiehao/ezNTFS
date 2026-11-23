@@ -15,7 +15,9 @@ final class DiskEvents {
     private var volumeObservers: [any NSObjectProtocol] = []
 
     @MainActor
-    init?(onChange: @escaping @MainActor @Sendable () -> Void) {
+    init?(onChange: @escaping @MainActor @Sendable () -> Void,
+          onSleep: @escaping @MainActor @Sendable () -> Void,
+          onWake: @escaping @MainActor @Sendable () -> Void) {
         guard let session = DASessionCreate(nil),
               let usbPort = IONotificationPortCreate(kIOMainPortDefault) else { return nil }
         self.session = session
@@ -50,9 +52,11 @@ final class DiskEvents {
         DASessionScheduleWithRunLoop(session, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
 
         let center = NSWorkspace.shared.notificationCenter
-        volumeObservers = [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification].map { name in
+        let handlers = [(NSWorkspace.didMountNotification, onChange), (NSWorkspace.didUnmountNotification, onChange),
+                        (NSWorkspace.willSleepNotification, onSleep), (NSWorkspace.didWakeNotification, onWake)]
+        volumeObservers = handlers.map { name, handler in
             center.addObserver(forName: name, object: nil, queue: .main) { _ in
-                MainActor.assumeIsolated { onChange() }
+                MainActor.assumeIsolated { handler() }
             }
         }
     }

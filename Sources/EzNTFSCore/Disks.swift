@@ -118,10 +118,21 @@ public enum Disks {
         }
     }
 
+    public static func mountAttemptsAfterWake(_ attempted: Set<UInt64>,
+                                             disksBeforeSleep: [ExternalVolume]) -> Set<UInt64> {
+        attempted.subtracting(disksBeforeSleep.lazy.filter(\.isWritable).map(\.connection))
+    }
+
     public static func eject(_ volume: ExternalVolume) throws {
+        try eject(volume, confirm: confirm, run: { arguments in _ = try Tool.run(diskutil, arguments) },
+                  mountedDevices: { Set(try VolumeMount.snapshot().keys) })
+    }
+
+    static func eject(_ volume: ExternalVolume, confirm: (ExternalVolume) throws -> ExternalVolume,
+                      run: ([String]) throws -> Void, mountedDevices: () throws -> Set<String>) throws {
         let actual = try confirm(volume)
-        _ = try Tool.run(diskutil, ["eject", "/dev/\(actual.wholeDisk)"])
-        guard !(try VolumeMount.snapshot()).keys.contains(where: {
+        try run(["eject", "/dev/\(actual.wholeDisk)"])
+        guard !(try mountedDevices()).contains(where: {
             $0 == actual.wholeDisk || $0.hasPrefix(actual.wholeDisk + "s")
         }) else {
             throw EZError("硬盘上仍有卷处于挂载状态。请关闭正在使用它的文件后再试。")
