@@ -2,7 +2,9 @@
 
 [English](README.md) · 简体中文 · [日本語](README.ja.md)
 
-ezNTFS 让 Mac 在访达里直接读写 NTFS 移动硬盘，保留原有格式。免费、开源，基于 NTFS-3G 和 macFUSE。
+**ezNTFS 是一款原生的 macOS 外置 NTFS 硬盘读写工具，免费开源。** 把 Windows 用过的 NTFS 移动硬盘或 U 盘接到 Mac，点「挂载读写」，就能在访达里拷文件。硬盘格式和已有文件都照旧。
+
+常用的盘可以单独开启自动挂载。拷重要素材时，可用「复制并校验」逐个读回副本，核对 SHA-256。底层读写由 NTFS-3G 和 macFUSE 提供。
 
 [下载 0.5.2（Apple 芯片）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel 预览版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS 中文官网](https://ixiehao.github.io/ezNTFS/zh/)
 
