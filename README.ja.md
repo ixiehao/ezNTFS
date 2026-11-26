@@ -4,7 +4,7 @@
 
 ezNTFS を使うと、外付けドライブを NTFS 形式のまま Finder で読み書きできます。NTFS-3G と macFUSE を使った、無料のオープンソースアプリです。
 
-[Apple Silicon 版 0.5.2 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel プレビュー版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
+[Apple Silicon 版 0.5.2 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel プレビュー版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS 公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
 
 <img src="website/assets/ezntfs-ja.png" width="660" alt="3 台のデモ用 NTFS ドライブとマウント状態を表示する ezNTFS">
 

@@ -1,15 +1,15 @@
 {
   "version": "0.5.2",
   "intelPreviewVersion": "0.5.2-intel.1",
-  "lastModified": "2026-11-23",
+  "lastModified": "2026-11-26",
   "minimumMacOS": "14",
   "macFUSE": "5.5.0",
   "languages": {
     "en": {
       "name": "English",
       "directory": "",
-      "title": "Free NTFS for Mac — Read and Write | ezNTFS",
-      "description": "ezNTFS is a free, open-source NTFS tool for macOS. Write to NTFS external drives in Finder without reformatting. Intel Mac preview available.",
+      "title": "ezNTFS – Free NTFS for Mac | Read and Write External Drives",
+      "description": "Read and write Windows NTFS drives on your Mac with ezNTFS, a free and open-source NTFS tool. Copy files in Finder without reformatting your external drive.",
       "skip": "Skip to content",
       "language": "Language",
       "features": "Illustrated guide",
@@ -22,10 +22,10 @@
       "privacy": "Privacy",
       "requirements": "macOS {macos} or later",
       "heading": [
-        "Read & write",
+        "Read and write",
         "NTFS on Mac"
       ],
-      "intro": "Free and open source. Read and write NTFS external drives right in Finder, without reformatting.",
+      "intro": "Read and write Windows NTFS drives on your Mac. ezNTFS is free and open source. Copy files in Finder and keep your drive’s existing format.",
       "screenshotAlt": "ezNTFS window showing three external NTFS disks, individual mount states, and controls for auto mount, copying, and ejection",
       "screenshotLabel": "ezNTFS shown with simulated drives.",
       "workflowTitle": "Read and write an NTFS drive on Mac",
@@ -63,8 +63,12 @@
           "macOS can usually read NTFS but does not include write support. To check the format, select the drive in Finder and choose File → Get Info."
         ],
         [
-          "Do I need to reformat my NTFS drive?",
-          "No. Mounting with ezNTFS keeps the NTFS format and your existing files."
+          "Can I write to a Windows NTFS drive on Mac without reformatting?",
+          "Yes. Connect your drive, choose Mount Read-Write in ezNTFS, then copy files in Finder. Your drive keeps its NTFS format and existing files, so you can still use it on Windows."
+        ],
+        [
+          "Is ezNTFS free?",
+          "Yes. ezNTFS is a free NTFS tool for Mac, published under the MIT license. The stable download is for Apple silicon. An Intel Mac preview is also available."
         ],
         [
           "What if my drive is still read-only?",
@@ -95,8 +99,8 @@
     "zh-Hans": {
       "name": "简体中文",
       "directory": "zh/",
-      "title": "Mac NTFS 硬盘读写｜免费开源 ezNTFS",
-      "description": "免费开源的 macOS NTFS 读写工具。无需格式化，在访达中直接写入 NTFS 移动硬盘。Apple 芯片版可下载，Intel Mac 可试用预览版。",
+      "title": "ezNTFS｜Mac 外置 NTFS 硬盘读写工具，免费开源",
+      "description": "ezNTFS 是免费开源的原生 macOS 应用。无需格式化，就能在访达里读写 Windows 的 NTFS 移动硬盘和 U 盘。提供 Apple 芯片正式版和 Intel Mac 预览版。",
       "skip": "跳到正文",
       "language": "语言",
       "features": "图文上手",
@@ -112,10 +116,10 @@
         "在 Mac 上",
         "读写 NTFS 硬盘"
       ],
-      "intro": "极致好用的 macOS NTFS 读写工具，免费开源。无需格式化，在访达里直接写入移动硬盘。",
+      "intro": "ezNTFS 是免费开源的原生 macOS 应用。Windows 的 NTFS 移动硬盘或 U 盘插到 Mac 上，挂载后就能在访达里拷文件，硬盘格式照旧。",
       "screenshotAlt": "ezNTFS 窗口显示三个外置 NTFS 硬盘、各自的挂载状态以及自动挂载、复制和弹出操作",
       "screenshotLabel": "ezNTFS 实际界面，使用模拟硬盘。",
-      "workflowTitle": "NTFS 移动硬盘图文指南",
+      "workflowTitle": "怎么在 Mac 上写入 NTFS 移动硬盘",
       "workflow": [
         [
           "挂载读写",
@@ -150,8 +154,12 @@
           "macOS 通常能读取 NTFS，但系统本身不支持写入。在访达中选中移动硬盘，点「文件 → 显示简介」即可查看格式。"
         ],
         [
-          "用 ezNTFS 写入需要格式化硬盘吗？",
-          "无需格式化。挂载会保留 NTFS 格式和已有文件。"
+          "怎么让 Mac 读写 Windows 的 NTFS 硬盘？",
+          "接上移动硬盘，在 ezNTFS 里点「挂载读写」，然后在访达里拷文件。硬盘保留 NTFS 格式和已有文件，接回 Windows 也能继续使用。"
+        ],
+        [
+          "ezNTFS 免费吗？",
+          "免费。ezNTFS 使用 MIT 许可证开源。Apple 芯片 Mac 可下载正式版，Intel Mac 可试用预览版。"
         ],
         [
           "装了 ezNTFS，为什么还是无法写入？",
@@ -182,8 +190,8 @@
     "ja": {
       "name": "日本語",
       "directory": "ja/",
-      "title": "MacでNTFSを読み書き｜無料・オープンソースのezNTFS",
-      "description": "ezNTFS は無料のオープンソース NTFS ツールです。フォーマットせずに Mac の Finder で外付け NTFS ドライブに書き込めます。Intel Mac 向けプレビューも公開中。",
+      "title": "ezNTFS｜Mac で外付け NTFS ドライブを読み書きする無料アプリ",
+      "description": "ezNTFS は Mac 向けの無料・オープンソース NTFS ツールです。Windows の外付け NTFS ドライブを再フォーマットせず、Finder で読み書きできます。",
       "skip": "本文へ移動",
       "language": "言語",
       "features": "図解ガイド",
@@ -199,7 +207,7 @@
         "Mac で NTFS を",
         "読み書き"
       ],
-      "intro": "無料で使えるオープンソースアプリ。フォーマットせずに、外付け NTFS ドライブを Finder で読み書きできます。",
+      "intro": "Windows の外付け NTFS ドライブを、フォーマットせずに Mac の Finder で読み書き。ezNTFS は無料のオープンソースアプリです。",
       "screenshotAlt": "3 台の外付け NTFS ディスクとマウント状態、自動マウント、コピー、取り出しを表示する ezNTFS のウインドウ",
       "screenshotLabel": "ezNTFS の画面。ディスクはデモ用です。",
       "workflowTitle": "Mac で外付け NTFS ドライブを使う",
@@ -237,8 +245,12 @@
           "macOS は通常 NTFS を読み取れますが、標準では書き込めません。形式は Finder の「ファイル → 情報を見る」で確認できます。"
         ],
         [
-          "書き込む前にドライブのフォーマットが必要ですか？",
-          "不要です。マウントしても NTFS 形式と既存のファイルはそのままです。"
+          "Windows の NTFS ドライブに、フォーマットせず Mac から書き込めますか？",
+          "ドライブをつなぎ、ezNTFS で「読み書きでマウント」を選ぶと、Finder でファイルをコピーできます。NTFS 形式と既存のファイルはそのままで、Windows でも引き続き使えます。"
+        ],
+        [
+          "ezNTFS は無料ですか？",
+          "はい。MIT ライセンスで公開しています。Apple シリコン Mac 向けの正式版と、Intel Mac 向けのプレビュー版をダウンロードできます。"
         ],
         [
           "インストール後も書き込めないときは？",

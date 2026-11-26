@@ -4,7 +4,7 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 Read and write NTFS external drives in Finder, with the drive’s existing format intact. ezNTFS is free and open source. It uses NTFS-3G and macFUSE.
 
-[Download 0.5.2 for Apple Silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel preview](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [Website](https://ixiehao.github.io/ezNTFS/)
+[Download 0.5.2 for Apple Silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel preview](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS official website](https://ixiehao.github.io/ezNTFS/)
 
 <img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three example NTFS drives and their mount status">
 

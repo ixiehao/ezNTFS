@@ -4,7 +4,7 @@
 
 ezNTFS 让 Mac 在访达里直接读写 NTFS 移动硬盘，保留原有格式。免费、开源，基于 NTFS-3G 和 macFUSE。
 
-[下载 0.5.2（Apple 芯片）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel 预览版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [官网](https://ixiehao.github.io/ezNTFS/zh/)
+[下载 0.5.2（Apple 芯片）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel 预览版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS 中文官网](https://ixiehao.github.io/ezNTFS/zh/)
 
 <img src="website/assets/ezntfs-zh-Hans.png" width="660" alt="ezNTFS 的三块演示硬盘及挂载状态">
 

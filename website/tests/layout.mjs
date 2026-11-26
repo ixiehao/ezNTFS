@@ -73,12 +73,23 @@ try {
             }
             const description = await page.locator('meta[name="description"]').getAttribute("content");
             assert.match(description, /NTFS/);
+            assert.match(await page.title(), /^ezNTFS/);
+            if (locale === "en") {
+              assert.match(await page.title(), /Free NTFS for Mac/);
+              assert.match(description, /free and open-source NTFS tool/);
+              assert.match(await page.locator(".intro").textContent(), /Read and write Windows NTFS drives on your Mac/);
+            }
+            if (locale === "zh-CN") {
+              assert.match(await page.locator("h1").textContent(), /在 Mac 上\s+读写 NTFS 硬盘/);
+              assert.match(description, /免费开源的原生 macOS 应用/);
+            }
             assert.equal(await page.locator('meta[property="og:title"]').getAttribute("content"), await page.title());
             assert.equal(await page.locator('meta[property="og:description"]').getAttribute("content"), description);
             assert.equal(app.description, description);
             assert.equal(app.inLanguage, locale);
             assert.equal(app.url, site + path);
             assert.equal(app.downloadUrl, pkg);
+            assert.equal(app.sameAs, "https://github.com/ixiehao/ezNTFS");
             const metrics = await page.evaluate(() => ({
               overflow: document.documentElement.scrollWidth - innerWidth,
               photo: document.querySelector(".app-preview img").naturalWidth,

@@ -84,7 +84,7 @@ def render(lang, copy):
         "inLanguage": LANG_TAGS[lang], "softwareVersion": version, "downloadUrl": download,
         "operatingSystem": f"macOS {data['minimumMacOS']}+ (Apple Silicon)",
         "screenshot": SITE + screenshot, "applicationCategory": "UtilitiesApplication",
-        "license": f"{REPO}/blob/main/LICENSE",
+        "license": f"{REPO}/blob/main/LICENSE", "sameAs": REPO,
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     }
     prefix = ".." if copy["directory"] else "."
