@@ -6,19 +6,25 @@ ezNTFS は、Mac で Windows の外付け NTFS ドライブを読み書きする
 
 よく使うドライブは個別に自動マウントできます。大事なファイルには、コピー先を読み戻して SHA-256 を照合する「コピーして検証」が使えます。NTFS の読み書きには NTFS-3G と macFUSE を使っています。
 
-[Apple Silicon 版 0.5.2 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel プレビュー版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS 公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
+[Apple シリコン版 0.5.3 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-arm64-Setup.zip) · [Intel 版 0.5.3 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-x86_64-Monterey-Setup.zip) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.3) · [ezNTFS 公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
 
 <img src="website/assets/ezntfs-ja.png" width="660" alt="3 台のデモ用 NTFS ドライブとマウント状態を表示する ezNTFS">
 
 ## インストール
 
-安定版は macOS 14 以降の Apple Silicon Mac に対応しています。
+Apple シリコン版は macOS 14 以降、Intel 版は macOS 12.7 以降に対応しています。 [Intel Mac インストールガイド（中国語）](docs/INSTALL-INTEL.zh-CN.md)
+
+ダウンロードしたファイルを解凍して `Install ezNTFS.app` を開き、「依存コンポーネントをインストールまたは修復」を選びます。対応する macFUSE があればそのまま使い、必要な場合は公式パッケージをダウンロードして検証します。認証や機能拡張の許可、再起動は macOS の指示に従ってください。
+
+単体の PKG を使う場合：
 
 1. 外付けドライブ上のファイルを閉じ、ドライブを安全に取り出してからインストールやアップデートを行います。
 2. macFUSE 5.5.0 のインストールは初回のみです。すでに入っている場合は、そのまま ezNTFS の PKG を開けます。[macFUSE 5.5.0 を入手](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)
 3. ezNTFS の PKG を開き、macOS の案内に従ってインストールを許可します。
 
 アプリと同梱の実行ファイルには ad-hoc 署名を使用しています。PKG は未署名で、Apple の公証は受けていません。
+
+インストール後は、アプリの環境チェックから修復できます。外付けディスクを使用中の場合は、安全に取り出してから再試行してください。
 
 ## 使い方
 

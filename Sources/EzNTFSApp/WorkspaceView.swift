@@ -4,6 +4,7 @@ import SwiftUI
 
 struct WorkspaceView: View {
     @ObservedObject var model: AppModel
+    var usesNativeToolbar = false
     @Environment(\.colorScheme) private var scheme
     @State private var settingsPresented = false
     @State private var errorDetailsPresented = false
@@ -24,6 +25,9 @@ struct WorkspaceView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
+                    #if EZNTFS_MONTEREY_PREVIEW
+                    if model.attachedTestImage == nil { testImageCard }
+                    #endif
                     if model.disks.isEmpty {
                         volumeCard
                     } else {
@@ -51,16 +55,22 @@ struct WorkspaceView: View {
         .sheet(isPresented: $model.dependencySheetPresented) { DependencyHealthView(model: model) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button {
-                    settingsPresented.toggle()
-                } label: {
-                    TablerIcon.settings.view()
-                }
-                .accessibilityLabel(language.text("settings.title"))
-                .accessibilityIdentifier("workspace-settings")
-                .help(language.text("settings.title"))
-                .popover(isPresented: $settingsPresented, arrowEdge: .top) { settings }
+                if !usesNativeToolbar { settingsButton }
             }
+        }
+    }
+
+    private var settingsButton: some View {
+        Button {
+            settingsPresented.toggle()
+        } label: {
+            TablerIcon.settings.view()
+        }
+        .accessibilityLabel(language.text("settings.title"))
+        .accessibilityIdentifier("workspace-settings")
+        .help(language.text("settings.title"))
+        .popover(isPresented: $settingsPresented, arrowEdge: .top) {
+            WorkspaceSettingsView(model: model) { settingsPresented = false }
         }
     }
 
@@ -79,6 +89,26 @@ struct WorkspaceView: View {
                         in: RoundedRectangle(cornerRadius: 10))
     }
 
+    #if EZNTFS_MONTEREY_PREVIEW
+    private var testImageCard: some View {
+        HStack(spacing: 14) {
+            diskMark
+            VStack(alignment: .leading, spacing: 4) {
+                Text(language.text("testImage.title")).font(.callout.weight(.semibold))
+                Text(language.text("testImage.intro")).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            action(language.text(model.testImageFingerprint == nil ? "testImage.connect" : "testImage.reconnect"),
+                   icon: .mount, prominent: true, identifier: "connect-test-image", method: model.connectTestImage)
+                .disabled(model.activity != nil || model.preparingDependency)
+        }
+        .padding(14)
+        .background(cardFill, in: cardShape)
+        .overlay { cardShape.strokeBorder(.primary.opacity(0.08)).allowsHitTesting(false) }
+    }
+    #endif
+
     private func diskRow(_ disk: ExternalVolume) -> some View {
         let busy = model.activity != nil
         let name = model.diskLabel(disk)
@@ -95,7 +125,7 @@ struct WorkspaceView: View {
                         .help(name)
                         .accessibilityAddTraits(.isHeader)
                     HStack(spacing: 8) {
-                        Text("\(disk.transport) · NTFS · \(capacity) · \(disk.partition)")
+                        Text("\(diskTransport(disk)) · NTFS · \(capacity) · \(disk.partition)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -121,9 +151,13 @@ struct WorkspaceView: View {
 
             Divider()
 
-            ViewThatFits(in: .horizontal) {
+            if #available(macOS 13.0, *) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { diskActions(disk, busy: busy, horizontal: true) }
+                    VStack(alignment: .leading, spacing: 8) { diskActions(disk, busy: busy, horizontal: false) }
+                }
+            } else {
                 HStack(spacing: 8) { diskActions(disk, busy: busy, horizontal: true) }
-                VStack(alignment: .leading, spacing: 8) { diskActions(disk, busy: busy, horizontal: false) }
             }
             if model.activity == .copying, model.selection == disk.id {
                 action(language.text("copy.cancel"), identifier: "copy-cancel", method: model.cancelCopy)
@@ -150,16 +184,42 @@ struct WorkspaceView: View {
             model.select(disk.id); model.showVolume()
         }.disabled(busy || disk.mount == nil)
         if disk.isWritable {
-            action(language.text("copy.action"), icon: .copy, identifier: "copy-\(disk.partition)") {
-                model.select(disk.id); model.chooseCopy()
-            }
-            .help(language.text("copy.help"))
-            .disabled(busy)
+            writableDiskAction(disk, busy: busy)
         }
         if horizontal { Spacer(minLength: 8) }
         action(language.text("disk.eject"), icon: .eject, identifier: "eject-\(disk.partition)") {
             model.eject(diskID: disk.id)
         }.disabled(busy).help(language.text("disk.ejectHelp"))
+    }
+
+    private func diskTransport(_ disk: ExternalVolume) -> String {
+        #if EZNTFS_MONTEREY_PREVIEW
+        if model.isManagedTestImage(disk) { return language.text("testImage.title") }
+        #endif
+        return disk.transport
+    }
+
+    @ViewBuilder
+    private func writableDiskAction(_ disk: ExternalVolume, busy: Bool) -> some View {
+        #if EZNTFS_MONTEREY_PREVIEW
+        if model.isManagedTestImage(disk) {
+            action(language.text("testImage.verify"), icon: .checked, identifier: "verify-test-image") {
+                model.verifyTestImage(disk)
+            }.disabled(busy)
+        } else {
+            copyAction(disk, busy: busy)
+        }
+        #else
+        copyAction(disk, busy: busy)
+        #endif
+    }
+
+    private func copyAction(_ disk: ExternalVolume, busy: Bool) -> some View {
+        action(language.text("copy.action"), icon: .copy, identifier: "copy-\(disk.partition)") {
+            model.select(disk.id); model.chooseCopy()
+        }
+        .help(language.text("copy.help"))
+        .disabled(busy)
     }
 
     private func capacityUsage(total: Int64, available: Int64) -> some View {
@@ -221,12 +281,27 @@ struct WorkspaceView: View {
                     .foregroundStyle(model.needsDiskPermission ? .secondary : .primary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("console-message")
-                HStack(spacing: 8) {
-                    if model.needsDiskPermission {
+                if model.needsDiskPermission {
+                    HStack(spacing: 8) {
                         Button(language.text("error.openPermissions"), action: model.openDiskPermission)
                             .buttonStyle(.borderedProminent)
-                        Button(language.text("error.copyServicePath"), action: model.copyMountHelperPath)
+                        if AppModel.automaticallyMountsNewDisks {
+                            Button(language.text("error.revealService"), action: model.revealMountService)
+                                .buttonStyle(.bordered)
+                        } else {
+                            Button(language.text("error.copyServicePath"), action: model.copyMountHelperPath)
+                                .buttonStyle(.bordered)
+                        }
+                    }
+                } else if model.needsExtensionApproval {
+                    Button(language.text("health.securitySettings"), action: model.openExtensionApproval)
+                        .buttonStyle(.borderedProminent)
+                }
+                HStack(spacing: 8) {
+                    if let failedMountID = model.failedMountID, model.disks.contains(where: { $0.id == failedMountID }) {
+                        Button(language.text("error.retryMount"), action: model.retryFailedMount)
                             .buttonStyle(.bordered)
+                            .disabled(model.activity != nil)
                     }
                     if let diagnostic = model.diagnostic {
                         Button(language.text("error.technical")) { errorDetailsPresented.toggle() }
@@ -346,25 +421,50 @@ struct WorkspaceView: View {
         .accessibilityIdentifier("copy-receipt")
     }
 
-    private var settings: some View {
+    private func automaticMountBinding(for disk: ExternalVolume) -> Binding<Bool> {
+        Binding(get: { model.automaticMountEnabled(for: disk) },
+                set: { model.setDiskAutomaticMount($0, diskID: disk.id) })
+    }
+
+    private var readyColor: Color {
+        scheme == .dark ? Color(red: 0.47, green: 0.83, blue: 0.63) : Color(red: 0.13, green: 0.42, blue: 0.28)
+    }
+}
+
+struct WorkspaceSettingsView: View {
+    @ObservedObject var model: AppModel
+    let dismiss: () -> Void
+    private var language: AppLanguage { model.language }
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(spacing: 11) {
                 settingToggle(
-                    language.text("settings.autoMount"), detail: language.text("settings.autoMountHint"), identifier: "auto-mount-global",
+                    language.text("settings.autoMount"), detail: language.text(
+                        AppModel.automaticallyMountsNewDisks ? "settings.autoMountConnectedHint" : "settings.autoMountHint"
+                    ), identifier: "auto-mount-global",
                     isOn: Binding(get: { model.autoMount }, set: { model.setAutomatic($0) })
                 )
                 .disabled(model.activity != nil)
-                settingToggle(language.text("settings.login"), detail: model.loginStatus == .requiresApproval
-                              ? language.text("settings.loginHint") : nil,
-                              identifier: "login-open", isOn: Binding(
-                                get: { model.loginStatus == .enabled || model.loginStatus == .requiresApproval },
-                                set: { model.setLogin($0) }
-                              ))
+                if #available(macOS 13.0, *) {
+                    settingToggle(language.text("settings.login"), detail: model.loginStatus == .requiresApproval
+                                  ? language.text("settings.loginHint") : nil,
+                                  identifier: "login-open", isOn: Binding(
+                                    get: { model.loginStatus == .enabled || model.loginStatus == .requiresApproval },
+                                    set: { model.setLogin($0) }
+                                  ))
+                } else {
+                    Button(language.text("settings.legacyLoginItems"), action: model.openLegacyLoginItems)
+                        .help(language.text("settings.legacyLoginHint"))
+                }
                 if let disk = model.selected {
                     Divider()
                     let restriction = model.automaticMountRestriction(for: disk)
                     settingToggle(language.text("settings.diskAutoMount"), detail: restriction ?? disk.name,
-                                  identifier: "disk-auto-mount", isOn: automaticMountBinding(for: disk))
+                                  identifier: "disk-auto-mount", isOn: Binding(
+                                    get: { model.automaticMountEnabled(for: disk) },
+                                    set: { model.setDiskAutomaticMount($0, diskID: disk.id) }
+                                  ))
                         .disabled(model.activity != nil || restriction != nil)
                 }
             }
@@ -380,7 +480,7 @@ struct WorkspaceView: View {
             Divider()
             HStack(spacing: 8) {
                 action(language.text("health.title"), icon: .information, identifier: "dependency-health", fillsWidth: true) {
-                    settingsPresented = false
+                    dismiss()
                     model.openDependencyHealth()
                 }
                 action(language.text("settings.refresh"), icon: .refresh, identifier: "disk-refresh", fillsWidth: true) {
@@ -391,11 +491,8 @@ struct WorkspaceView: View {
         }
         .padding(16)
         .frame(width: 328, alignment: .leading)
-    }
-
-    private func automaticMountBinding(for disk: ExternalVolume) -> Binding<Bool> {
-        Binding(get: { model.remembered.contains(disk.fingerprint) },
-                set: { model.setRemembered($0, diskID: disk.id) })
+        .tint(WorkspaceView.tint)
+        .environment(\.locale, language.locale)
     }
 
     private func settingToggle(_ title: String, detail: String?, identifier: String, isOn: Binding<Bool>) -> some View {
@@ -417,25 +514,21 @@ struct WorkspaceView: View {
                 .accessibilityIdentifier(identifier)
         }
     }
+}
 
-    private func action(_ title: String, icon: TablerIcon? = nil, prominent: Bool = false,
-                        identifier: String, fillsWidth: Bool = false, minLabelWidth: CGFloat? = nil,
-                        method: @escaping () -> Void) -> some View {
-        Button(action: method) {
-            HStack(spacing: 6) {
-                if let icon { icon.view(size: 16) }
-                Text(title).fixedSize(horizontal: true, vertical: false)
-            }
-            .frame(minWidth: minLabelWidth, maxWidth: fillsWidth ? .infinity : nil)
+@MainActor
+private func action(_ title: String, icon: TablerIcon? = nil, prominent: Bool = false,
+                    identifier: String, fillsWidth: Bool = false, minLabelWidth: CGFloat? = nil,
+                    method: @escaping () -> Void) -> some View {
+    Button(action: method) {
+        HStack(spacing: 6) {
+            if let icon { icon.view(size: 16) }
+            Text(title).fixedSize(horizontal: true, vertical: false)
         }
-        .buttonStyle(ConsoleButtonStyle(prominent: prominent))
-        .accessibilityIdentifier(identifier)
+        .frame(minWidth: minLabelWidth, maxWidth: fillsWidth ? .infinity : nil)
     }
-
-    private var readyColor: Color {
-        scheme == .dark ? Color(red: 0.47, green: 0.83, blue: 0.63) : Color(red: 0.13, green: 0.42, blue: 0.28)
-    }
-
+    .buttonStyle(ConsoleButtonStyle(prominent: prominent))
+    .accessibilityIdentifier(identifier)
 }
 
 private struct ConsoleProgressStyle: ProgressViewStyle {

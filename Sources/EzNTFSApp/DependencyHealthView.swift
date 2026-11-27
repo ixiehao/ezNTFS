@@ -19,7 +19,7 @@ struct DependencyHealthView: View {
                 } label: {
                     Label { Text(language.text("health.refresh")) } icon: { TablerIcon.refresh.view(size: 15) }
                 }
-                .disabled(model.checkingDependencies)
+                .disabled(model.checkingDependencies || model.preparingDependency || (model.setup && !model.setupArchitectureMatches))
             }
 
             if model.checkingDependencies {
@@ -35,7 +35,7 @@ struct DependencyHealthView: View {
                     row("NTFS-3G", status: report.ntfs3g)
                     row(language.text("health.service"), status: report.service, service: true)
                 }
-                if !report.canMountReadWrite && !model.checkingDependencies {
+                if !model.setup && !report.canMountReadWrite && !model.checkingDependencies {
                     Label {
                         Text(language.text("health.blocked"))
                     } icon: {
@@ -43,44 +43,44 @@ struct DependencyHealthView: View {
                     }
                     .font(.callout)
                 }
-                if report.macFUSE == .missing && !model.checkingDependencies {
-                    Button(language.text("health.fuseWebsite")) { openURL(Dependencies.macFUSEWebsite) }
-                }
-                if report.service == .missing {
-                    Text(language.text("health.missingService"))
-                        .font(.callout).foregroundStyle(.secondary)
-                }
-                if let reason = report.driverUsage.repairBlockMessage, model.dependencyInstallError == nil {
-                    Label {
-                        Text(language.resolve(reason))
-                    } icon: {
-                        TablerIcon.information.view(size: 15).foregroundStyle(.orange)
-                    }
-                    .font(.callout)
-                }
-                HStack {
-                    if report.macFUSE.path != nil && report.service != .missing {
-                        Button(report.ntfs3g.path == nil ? language.text("health.install") : language.text("health.reinstall"),
-                               action: model.installDependency)
-                            .buttonStyle(.borderedProminent)
-                            .disabled(model.activity != nil || model.checkingDependencies || report.driverUsage != .idle)
-                    }
-                    if report.service.path == nil && report.service != .missing {
-                        Button(language.text("health.serviceSettings"), action: model.openServiceSettings)
-                    }
-                    Button(language.text("health.diskPermissions"), action: model.openDiskPermission)
-                }
             }
-            if let error = model.dependencyInstallError {
-                ScrollView {
-                    Text(language.resolve(error)).foregroundStyle(.secondary).textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            if let notice = model.dependencyNotice {
+                HStack(alignment: .top, spacing: 8) {
+                    if model.preparingDependency { ProgressView().controlSize(.small) }
+                    Text(language.resolve(notice))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.callout).frame(maxHeight: 95)
+                .font(.callout)
+                if notice.key == "health.downloadError" || notice.key == "health.verifyError" {
+                    Button(language.text("health.fuseWebsite")) { openURL(MacFUSEInstaller.releasePage) }
+                } else if notice.key == "health.mainInstallerMissing" || notice.key == "setup.wrongArchitecture" {
+                    Button(language.text("health.releasePage")) { openURL(ReleaseCheck.projectPage.appendingPathComponent("releases")) }
+                } else if #unavailable(macOS 13.0), notice.key == "health.awaitingFuse" {
+                    Button(language.text("health.securitySettings"), action: model.openExtensionApproval)
+                }
+            } else if model.dependencyStep == .macFUSE && !model.checkingDependencies {
+                Text(language.text("health.fuseHint", MacFUSEInstaller.version))
+                    .font(.callout).foregroundStyle(.secondary)
             }
             HStack {
+                if !model.setup {
+                    Button(language.text("health.diskPermissions"), action: model.openDiskPermission)
+                }
                 Spacer()
-                Button(language.text("button.done")) { dismiss() }.keyboardShortcut(.defaultAction)
+                if !model.setup {
+                    Button(language.text("button.done")) { dismiss() }
+                }
+                if model.dependencyStep != nil {
+                    Button(language.text("health.install"), action: model.installDependency)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(model.checkingDependencies || model.preparingDependency || model.activity != nil)
+                        .keyboardShortcut(.defaultAction)
+                } else if model.setup && model.dependencyReport != nil {
+                    Button(language.text("setup.openApp"), action: model.openInstalledApp)
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                }
             }
         }
         .padding(22)
@@ -96,10 +96,13 @@ struct DependencyHealthView: View {
                 Text(name).font(.callout.weight(.semibold))
                 switch status {
                 case .ready(_, let version):
-                    Text(service ? language.text("health.connected") : language.text("health.readyVersion", version))
+                    Text(service ? language.text(model.setup ? "setup.serviceInstalled" : "health.connected") :
+                            language.text("health.readyVersion", version))
                         .font(.callout).foregroundStyle(.secondary)
                 case .missing:
                     Text(language.text("health.missing")).font(.callout).foregroundStyle(.secondary)
+                case .disabled:
+                    Text(language.text("health.disabled")).font(.callout).foregroundStyle(.secondary)
                 case .unavailable(let detail):
                     DisclosureGroup(language.text("health.unavailable")) {
                         Text(detail).font(.caption.monospaced()).textSelection(.enabled)

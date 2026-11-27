@@ -27,15 +27,12 @@ if set(languages) != set(LANG_TAGS) or any(
 version = data["version"]
 if not re.fullmatch(r"\d+\.\d+\.\d+", version):
     raise SystemExit("Expected a stable release version.")
-intel_preview_version = data["intelPreviewVersion"]
-if not re.fullmatch(r"\d+\.\d+\.\d+-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*", intel_preview_version):
-    raise SystemExit("Expected an Intel preview version with a prerelease suffix.")
 last_modified = date.fromisoformat(data["lastModified"]).isoformat()
 release = f"{REPO}/releases/tag/v{version}"
-intel_preview = f"{REPO}/releases/tag/v{intel_preview_version}"
-intel_download = f"{REPO}/releases/download/v{intel_preview_version}/ezNTFS-{intel_preview_version}-x86_64.pkg"
 assets = f"{REPO}/releases/download/v{version}"
-download = f"{assets}/ezNTFS-{version}-arm64.pkg"
+download = f"{assets}/ezNTFS-{version}-arm64-Setup.zip"
+intel_download = f"{assets}/ezNTFS-{version}-x86_64-Monterey-Setup.zip"
+intel_guide = f"{REPO}/blob/main/docs/INSTALL-INTEL.zh-CN.md"
 checksum = f"{assets}/SHA256SUMS.txt"
 macfuse = f"https://github.com/macfuse/macfuse/releases/tag/macfuse-{data['macFUSE']}"
 template = Template((SOURCE / "index.template.html").read_text(encoding="utf-8"))
@@ -81,8 +78,9 @@ def render(lang, copy):
     schema = {
         "@context": "https://schema.org", "@type": "SoftwareApplication",
         "name": "ezNTFS", "description": copy["description"], "url": canonical(lang),
-        "inLanguage": LANG_TAGS[lang], "softwareVersion": version, "downloadUrl": download,
-        "operatingSystem": f"macOS {data['minimumMacOS']}+ (Apple Silicon)",
+        "inLanguage": LANG_TAGS[lang], "softwareVersion": version, "downloadUrl": [download, intel_download],
+        "operatingSystem": (f"macOS {data['minimumMacOS']}+ (Apple Silicon), "
+                            f"macOS {data['minimumIntelMacOS']}+ (Intel)"),
         "screenshot": SITE + screenshot, "applicationCategory": "UtilitiesApplication",
         "license": f"{REPO}/blob/main/LICENSE", "sameAs": REPO,
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
@@ -123,8 +121,8 @@ def render(lang, copy):
             "requirements": text["requirements"].format(macos=data["minimumMacOS"]),
             "heading_first": escape(heading_first), "heading_second": escape(heading_second),
             "release_url": release, "download_url": download, "checksum_url": checksum,
-            "intel_preview_url": intel_preview, "intel_download_url": intel_download,
-            "intel_preview_version": intel_preview_version,
+            "intel_download_url": intel_download, "intel_guide_url": intel_guide,
+            "intel_requirements": text["requirements"].format(macos=data["minimumIntelMacOS"]),
             "workflow_title": text["workflowTitle"],
             "workflow_steps": "\n        ".join(workflow_steps), "questions": "\n      ".join(question_html),
             "install_title": text["installTitle"], "sign_title": text["signTitle"],
@@ -138,9 +136,10 @@ def render(lang, copy):
         f'# {copy["title"]}', "", copy["intro"], "", f'## {copy["downloadTitle"]}', "",
         f'- {copy["stableChip"]} · {copy["stableLabel"]} · v{version} · '
         f'[{copy["download"]}]({download}) · [{copy["release"]}]({release})',
-        f'- Intel Mac · {copy["previewLabel"]} · v{intel_preview_version} · '
-        f'[{copy["intelPreviewLink"]}]({intel_download}) · [{copy["release"]}]({intel_preview})',
-        "", copy["intelPreviewNote"], "", f'## {copy["workflowTitle"]}', "", copy["guideNote"], "",
+        f'- Intel Mac · {copy["stableLabel"]} · v{version} · '
+        f'[{copy["intelDownload"]}]({intel_download}) · [{copy["release"]}]({release})',
+        "", f'[{copy["intelGuide"]}]({intel_guide})',
+        "", f'## {copy["workflowTitle"]}', "", copy["guideNote"], "",
         *workflow_markdown,
         f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
         "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
@@ -167,8 +166,8 @@ files["sitemap.xml"] = ET.tostring(sitemap, encoding="utf-8", xml_declaration=Tr
 files["llms.txt"] = (
     f'# ezNTFS\n\n> {languages["en"]["description"]}\n\n'
     + "\n".join(f'- [{copy["name"]}]({canonical(lang)}index.md)' for lang, copy in languages.items())
-    + f"\n- [Source and documentation]({REPO})\n- [Stable release for Apple silicon]({release})"
-    + f"\n- [Intel Mac preview]({intel_preview})\n"
+    + f"\n- [Source and documentation]({REPO})\n- [Stable release for Apple silicon and Intel]({release})"
+    + f"\n- [Intel Mac installation guide (Chinese)]({intel_guide})\n"
 ).encode()
 verification_key = (SOURCE / "indexnow-key.txt").read_text(encoding="utf-8").strip()
 if not re.fullmatch(r"[0-9a-f]{32}", verification_key):

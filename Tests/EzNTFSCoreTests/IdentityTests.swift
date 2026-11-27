@@ -62,6 +62,41 @@ struct IdentityTests {
         #expect(Disks.automaticCandidates([saved, manual], remembered: [paired], attempted: [saved.id]).isEmpty)
     }
 
+    @Test func connectedPolicyMountsANewNTFSVolumeAndHonorsSafetyChecks() {
+        let newDisk = volume(paired, connection: 10, disk: "disk4")
+        let liveIdentity = DiskFingerprint(serial: "connection:15", vendor: 1, product: 2,
+                                           partitionOffset: 0, partitionBytes: 500_000_000)
+        let bridgeWithoutSerial = volume(liveIdentity, connection: 15, disk: "disk5")
+        let unconfirmed = ExternalVolume(connection: 20, deviceConnection: 21, fingerprint: paired,
+                                         partition: "disk6s1", wholeDisk: "disk6", name: "Unconfirmed",
+                                         mount: nil, fileSystemConfirmed: false)
+        let otherDriver = ExternalVolume(connection: 23, deviceConnection: 24, fingerprint: paired,
+                                         partition: "disk7s1", wholeDisk: "disk7", name: "Other driver",
+                                         mount: VolumeMount(path: "/Volumes/Fixture", kind: "ufsd_NTFS", readOnly: false),
+                                         fileSystemConfirmed: true)
+        #expect(Disks.automaticCandidates([newDisk, bridgeWithoutSerial], policy: .connectedExcept([]), attempted: [])
+                == [newDisk, bridgeWithoutSerial])
+        #expect(Disks.automaticCandidates([newDisk, bridgeWithoutSerial], policy: .connectedExcept([paired]), attempted: [15]).isEmpty)
+        #expect(Disks.automaticCandidates([unconfirmed], policy: .connectedExcept([]), attempted: []).isEmpty)
+        #expect(Disks.automaticCandidates([otherDriver], policy: .connectedExcept([]), attempted: []).isEmpty)
+        #expect(Disks.automaticCandidates([newDisk, volume(paired, connection: 30, disk: "disk8")],
+                                         policy: .connectedExcept([]), attempted: []).isEmpty)
+    }
+
+    @Test func storesStableOptOutsApartFromThePreviousRememberedDisks() throws {
+        let domain = "local.ezntfs.tests." + UUID().uuidString
+        let defaults = try #require(UserDefaults(suiteName: domain))
+        defer { defaults.removePersistentDomain(forName: domain) }
+        let volatile = DiskFingerprint(serial: "connection:15", vendor: 1, product: 2,
+                                       partitionOffset: 0, partitionBytes: 500_000_000)
+        try RememberedDisks.save([paired], to: defaults)
+        try RememberedDisks.saveExclusions([paired, volatile], to: defaults)
+        #expect(RememberedDisks.loadExclusions(defaults) == [paired])
+        #expect(RememberedDisks.load(defaults) == [paired])
+        try RememberedDisks.saveRecognizedVolumes([paired], to: defaults)
+        #expect(RememberedDisks.loadRecognizedVolumes(defaults) == [paired])
+    }
+
 }
 
 extension IdentityTests {

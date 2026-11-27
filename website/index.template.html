@@ -59,19 +59,18 @@
       <div class="download-grid">
         <article class="download-card">
           <h3>$stableChip <span class="channel stable">$stableLabel</span></h3>
-          <p class="build">v$version · $requirements · PKG</p>
+          <p class="build">v$version · $requirements · Setup ZIP</p>
           <div class="download-actions">
             <a class="button primary" data-download href="$download_url">$download</a>
             <a class="text-link" href="$release_url">$release</a>
           </div>
         </article>
         <article class="download-card">
-          <h3>Intel Mac <span class="channel">$previewLabel</span></h3>
-          <p class="build">v$intel_preview_version · $requirements · PKG</p>
-          <p class="preview-note">$intelPreviewNote</p>
+          <h3>Intel Mac <span class="channel stable">$stableLabel</span></h3>
+          <p class="build">v$version · $intel_requirements · Setup ZIP</p>
           <div class="download-actions">
-            <a class="button secondary" data-intel-preview href="$intel_download_url">$intelPreviewLink</a>
-            <a class="text-link" data-intel-release href="$intel_preview_url">$release</a>
+            <a class="button primary" data-intel-download href="$intel_download_url">$intelDownload</a>
+            <a class="text-link" data-intel-release href="$release_url">$release</a>
           </div>
         </article>
       </div>
@@ -86,6 +85,7 @@
         <div>
           <h2>$install_title</h2>
           <ol>$install_steps</ol>
+          <a class="text-link" href="$intel_guide_url">$intelGuide</a>
           <details class="depend-install">
             <summary>$macfuse_missing</summary>
             <p>$macfuse_once</p>

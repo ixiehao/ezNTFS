@@ -32,6 +32,7 @@ public struct ExternalVolume: Identifiable, Sendable, Equatable {
     public let mount: VolumeMount?
     public let fileSystemConfirmed: Bool
     public let transport: String
+    let testImageOwner: uid_t?
 
     public var isWritable: Bool { mount?.kind == "macfuse" && mount?.readOnly == false }
 
@@ -42,7 +43,7 @@ public struct ExternalVolume: Identifiable, Sendable, Equatable {
 
     public init(connection: UInt64, deviceConnection: UInt64, fingerprint: DiskFingerprint,
                 partition: String, wholeDisk: String, name: String, mount: VolumeMount?,
-                fileSystemConfirmed: Bool, transport: String = "USB") {
+                fileSystemConfirmed: Bool, transport: String = "USB", testImageOwner: uid_t? = nil) {
         self.connection = connection
         self.deviceConnection = deviceConnection
         self.fingerprint = fingerprint
@@ -52,11 +53,30 @@ public struct ExternalVolume: Identifiable, Sendable, Equatable {
         self.mount = mount
         self.fileSystemConfirmed = fileSystemConfirmed
         self.transport = transport
+        self.testImageOwner = testImageOwner
+    }
+}
+
+public enum AutomaticMountPolicy: Sendable {
+    case remembered(Set<DiskFingerprint>)
+    case connectedExcept(Set<DiskFingerprint>)
+
+    public func includes(_ fingerprint: DiskFingerprint) -> Bool {
+        switch self {
+        case .remembered(let disks): fingerprint.canRemember && disks.contains(fingerprint)
+        case .connectedExcept(let excluded): !excluded.contains(fingerprint)
+        }
     }
 }
 
 public enum Disks {
     static let diskutil = "/usr/sbin/diskutil"
+    private static let partitionPattern = #"\Adisk[0-9]+(?:s[0-9]+)?\z"#
+    private static let wholeDiskPattern = #"\Adisk[0-9]+\z"#
+
+    static func isPartitionName(_ name: String) -> Bool {
+        name.range(of: partitionPattern, options: .regularExpression) != nil
+    }
 
     public static func scan(known: Set<DiskFingerprint> = [], excluding: Set<UInt64> = []) throws -> [ExternalVolume] {
         let mounts = try VolumeMount.snapshot()
@@ -77,7 +97,7 @@ public enum Disks {
     }
 
     public static func volume(_ partition: String, known: Set<DiskFingerprint> = []) throws -> ExternalVolume {
-        guard partition.wholeMatch(of: /disk[0-9]+(s[0-9]+)?/) != nil else {
+        guard isPartitionName(partition) else {
             throw EZError("分区标识无效。")
         }
         let media = IOServiceGetMatchingService(kIOMainPortDefault, IOBSDNameMatching(kIOMainPortDefault, 0, partition))
@@ -93,7 +113,8 @@ public enum Disks {
     public static func confirm(_ volume: ExternalVolume) throws -> ExternalVolume {
         let actual = try self.volume(volume.partition, known: [volume.fingerprint])
         guard actual.fingerprint == volume.fingerprint, actual.connection == volume.connection,
-              actual.deviceConnection == volume.deviceConnection, actual.wholeDisk == volume.wholeDisk else {
+              actual.deviceConnection == volume.deviceConnection, actual.wholeDisk == volume.wholeDisk,
+              actual.testImageOwner == volume.testImageOwner else {
             throw EZError("设备连接已变化。请重新确认目标盘。")
         }
         return actual
@@ -111,9 +132,14 @@ public enum Disks {
 
     public static func automaticCandidates(_ volumes: [ExternalVolume], remembered: Set<DiskFingerprint>,
                                            attempted: Set<UInt64>) -> [ExternalVolume] {
+        automaticCandidates(volumes, policy: .remembered(remembered), attempted: attempted)
+    }
+
+    public static func automaticCandidates(_ volumes: [ExternalVolume], policy: AutomaticMountPolicy,
+                                           attempted: Set<UInt64>) -> [ExternalVolume] {
         let counts = Dictionary(grouping: volumes, by: \.fingerprint).mapValues(\.count)
         return volumes.filter {
-            $0.fingerprint.canRemember && remembered.contains($0.fingerprint) && counts[$0.fingerprint] == 1
+            policy.includes($0.fingerprint) && counts[$0.fingerprint] == 1
                 && $0.fileSystemConfirmed && $0.canMountReadWrite && !attempted.contains($0.connection)
         }
     }
@@ -150,7 +176,7 @@ public enum Disks {
     private static func describe(_ media: io_service_t, session: DASession?, mounts: [String: VolumeMount],
                                  known: Set<DiskFingerprint>, excluding: Set<UInt64> = []) -> ExternalVolume? {
         guard let partition = property(media, "BSD Name") as? String,
-              partition.wholeMatch(of: /disk[0-9]+(s[0-9]+)?/) != nil,
+              isPartitionName(partition),
               let size = property(media, "Size") as? NSNumber,
               let connection = registryID(media) else { return nil }
         let whole = property(media, "Whole") as? Bool == true
@@ -167,7 +193,7 @@ public enum Disks {
                                           partitionOffset: offset, partitionBytes: size.uint64Value)
         let description = session.flatMap { DADiskCreateFromIOMedia(nil, $0, media) }
             .flatMap { DADiskCopyDescription($0) as? [String: Any] }
-        if description?[kDADiskDescriptionDeviceInternalKey as String] as? Bool == true { return nil }
+        if storage.testImageOwner == nil, description?[kDADiskDescriptionDeviceInternalKey as String] as? Bool == true { return nil }
         let kind = description?[kDADiskDescriptionVolumeKindKey as String] as? String
         if let kind, kind != "ntfs", kind != "macfuse" { return nil }
         let confirmed = kind == "ntfs" || mount?.kind == "ntfs"
@@ -176,9 +202,13 @@ public enum Disks {
         let name = description?[kDADiskDescriptionVolumeNameKey as String] as? String
             ?? mount.map { URL(fileURLWithPath: $0.path).lastPathComponent }
             ?? partition
+        if storage.testImageOwner != nil && !known.contains(fingerprint) && (!confirmed || name != "EZNTFS-QA") {
+            return nil
+        }
         return ExternalVolume(connection: connection, deviceConnection: storage.connection, fingerprint: fingerprint,
                               partition: partition, wholeDisk: storage.wholeDisk, name: name,
-                              mount: mount, fileSystemConfirmed: confirmed, transport: storage.transport)
+                              mount: mount, fileSystemConfirmed: confirmed, transport: storage.transport,
+                              testImageOwner: storage.testImageOwner)
     }
 
     private struct StorageIdentity {
@@ -188,6 +218,7 @@ public enum Disks {
         let product: UInt16
         let wholeDisk: String
         let transport: String
+        var testImageOwner: uid_t? = nil
     }
 
     private static func storageIdentity(of media: io_service_t) -> StorageIdentity? {
@@ -201,7 +232,7 @@ public enum Disks {
             if wholeDisk == nil, IOObjectConformsTo(current, "IOMedia") != 0,
                property(current, "Whole") as? Bool == true,
                let name = property(current, "BSD Name") as? String,
-               name.wholeMatch(of: /disk[0-9]+/) != nil {
+               name.range(of: wholeDiskPattern, options: .regularExpression) != nil {
                 wholeDisk = name
             }
             if let attributes = property(current, "Protocol Characteristics") as? [String: Any],
@@ -209,6 +240,9 @@ public enum Disks {
                let bus = attributes["Physical Interconnect"] as? String, !bus.isEmpty {
                 transport = bus
             }
+            #if EZNTFS_MONTEREY_PREVIEW
+            if let wholeDisk, let image = testImage(in: current, wholeDisk: wholeDisk) { return image }
+            #endif
             if deviceID == nil, IOObjectConformsTo(current, "IOBlockStorageDevice") != 0 {
                 deviceID = registryID(current)
                 let characteristics = property(current, "Device Characteristics") as? [String: Any]
@@ -234,6 +268,28 @@ public enum Disks {
         return StorageIdentity(connection: deviceID, serial: serial, vendor: 0, product: 0,
                                wholeDisk: wholeDisk, transport: transport)
     }
+
+    #if EZNTFS_MONTEREY_PREVIEW
+    // Preview QA recognizes only an Apple file-backed device and the private, deliberately named fixture.
+    private static func testImage(in entry: io_service_t, wholeDisk: String) -> StorageIdentity? {
+        guard IOObjectConformsTo(entry, "IOBlockStorageDevice") != 0,
+              let attributes = property(entry, "Protocol Characteristics") as? [String: Any],
+              attributes["Physical Interconnect"] as? String == "Virtual Interface",
+              attributes["Physical Interconnect Location"] as? String == "File",
+              let path = imagePath(attributes["Virtual Interface Location Path"]),
+              path.hasPrefix("/"), let connection = registryID(entry),
+              let image = PreviewTestImage.identity(of: URL(fileURLWithPath: path)) else { return nil }
+        return StorageIdentity(connection: connection, serial: image.fingerprint.serial,
+                               vendor: 0, product: 0, wholeDisk: wholeDisk, transport: "Test Image",
+                               testImageOwner: image.owner)
+    }
+
+    private static func imagePath(_ value: Any?) -> String? {
+        if let string = value as? String { return string }
+        guard let data = value as? Data else { return nil }
+        return String(data: Data(data.prefix(while: { $0 != 0 })), encoding: .utf8)
+    }
+    #endif
 
     private static func usableSerial(_ value: String?) -> String? {
         guard let value else { return nil }

@@ -35,7 +35,7 @@ public enum ReleaseCheck: Equatable, Sendable {
                   !release.draft, !release.prerelease,
                   let candidate = versionComponents(release.tag_name) else { return .unavailable }
             guard current.lexicographicallyPrecedes(candidate) else { return .upToDate }
-            let page = projectPage.appending(path: "releases/tag").appending(path: release.tag_name)
+            let page = projectPage.appendingPathComponent("releases/tag").appendingPathComponent(release.tag_name)
             return .updateAvailable(version: candidate.map(String.init).joined(separator: "."), page: page)
         } catch let error as URLError where error.code == .notConnectedToInternet {
             return .offline

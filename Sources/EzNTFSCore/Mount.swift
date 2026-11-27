@@ -7,7 +7,8 @@ public enum Mounting {
         guard geteuid() == 0, uid != 0 else { throw EZError("读写挂载需要 ezNTFS 系统服务。") }
         let candidate = try Disks.volume(partition, known: [fingerprint])
         guard candidate.connection == connection, candidate.deviceConnection == deviceConnection,
-              candidate.fingerprint == fingerprint else {
+              candidate.fingerprint == fingerprint,
+              candidate.testImageOwner == nil || candidate.testImageOwner == uid else {
             throw EZError("授权期间磁盘已变化，已取消操作。")
         }
         if candidate.isWritable { return }
@@ -80,8 +81,8 @@ public enum Mounting {
         let options = ["local", "auto_xattr", "norecover", "windows_names", "noatime", "iosize=1048576",
                        "uid=\(uid)", "gid=\(gid)", "volname=\(label)"].joined(separator: ",")
         _ = try Tool.run(driver, ["-o", options, sourcePath, destinationPath])
-        let deadline = ContinuousClock.now + .seconds(7)
-        while ContinuousClock.now < deadline {
+        let deadline = DispatchTime.now() + .seconds(7)
+        while DispatchTime.now() < deadline {
             if let observed = try? MountedDisk.at(destinationPath),
                matchesWritableMount(observed, source: sourcePath, path: destinationPath, partition: partition) {
                 return

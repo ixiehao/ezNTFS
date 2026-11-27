@@ -6,19 +6,25 @@
 
 常用的盘可以单独开启自动挂载。拷重要素材时，可用「复制并校验」逐个读回副本，核对 SHA-256。底层读写由 NTFS-3G 和 macFUSE 提供。
 
-[下载 0.5.2（Apple 芯片）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.2/ezNTFS-0.5.2-arm64.pkg) · [Intel 预览版](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2-intel.1) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.2) · [ezNTFS 中文官网](https://ixiehao.github.io/ezNTFS/zh/)
+[下载 0.5.3（Apple 芯片）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-arm64-Setup.zip) · [下载 0.5.3（Intel）](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-x86_64-Monterey-Setup.zip) · [发布说明与校验和](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.3) · [ezNTFS 中文官网](https://ixiehao.github.io/ezNTFS/zh/)
 
 <img src="website/assets/ezntfs-zh-Hans.png" width="660" alt="ezNTFS 的三块演示硬盘及挂载状态">
 
 ## 安装
 
-正式版支持 Apple 芯片 Mac，系统需为 macOS 14 或更新版本。
+Apple 芯片版支持 macOS 14 或更新版本，Intel 版支持 macOS 12.7 或更新版本。 [Intel Mac 图文安装教程](docs/INSTALL-INTEL.zh-CN.md)
+
+解压下载的安装包后打开 `Install ezNTFS.app`，点「安装或修复依赖」。已装兼容的 macFUSE 时会跳过，缺少时会下载并验证官方安装包。管理员授权、扩展许可和重启按 macOS 提示操作。
+
+如果下载的是独立 PKG：
 
 1. 关闭外置硬盘上的文件，安全弹出硬盘后再安装或升级。
 2. macFUSE 5.5.0 只需安装一次。已经装好就可以直接打开 ezNTFS 安装包。[下载 macFUSE 5.5.0](https://github.com/macfuse/macfuse/releases/tag/macfuse-5.5.0)
 3. 打开 ezNTFS 的 PKG，按 macOS 提示授权安装。
 
 应用和随附的可执行文件使用 ad-hoc 签名。PKG 未签名、未公证。
+
+修复依赖时，可从「环境检查 → 安装或修复依赖」进入。硬盘正在使用时，先安全弹出再重试。
 
 ## 使用
 

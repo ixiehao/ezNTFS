@@ -2,7 +2,7 @@
 
 ## 环境
 
-CI 使用 Xcode 26.3 的 Swift 工具链，SwiftPM 最低运行版本为 macOS 14。本次安装包基于 NTFS-3G 2026.9.28 和 macFUSE 5.5.0。构建需预装官方 macFUSE，安装时会校验本机 macFUSE 签名、版本和动态库摘要。
+CI 使用 Xcode 26.3 的 Swift 工具链。默认打包目标为 macOS 14，Intel Monterey 包的目标为 macOS 12.7。本次安装包基于 NTFS-3G 2026.9.28 和 macFUSE 5.5.0。构建需预装官方 macFUSE，并确保 `pkg-config` 在 PATH 中。安装时会校验本机 macFUSE 签名、版本和动态库摘要。
 
 ## 构建
 
@@ -16,9 +16,31 @@ scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
 
 PKG 安装主 App、按需启动的系统服务和版本化驱动。安装器会从本机官方 macFUSE 安装中校验并复制必要的动态库到系统目录。输出写入 `dist/ezNTFS-<版本>-<架构>/`，脚本拒绝覆盖已存在的正式产物。仅构建应用用于调试时可用 `scripts/build-app.sh`。原有拖放式 DMG 脚本用于界面预览，完整部署从 PKG 入口安装。
 
+PKG 默认按当前架构构建。可以为 App、系统服务、安装辅助程序和 NTFS-3G 指定同一个目标架构。下例构建 Intel 原生包，要求构建机已安装官方 macFUSE 5.5.0，并能运行 Intel 命令行程序。在 Apple 芯片 Mac 上，这项构建验证使用 Rosetta。Intel Mac 使用 Xcode 26.3 等同时支持 Swift 6 和 Intel 的工具链。
+
+```zsh
+EZNTFS_ARCHITECTURE=x86_64 scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
+```
+
+两个架构和不同的最低系统目标使用独立的构建缓存。安装器在写入系统目录前检查架构。Intel Monterey 实盘包使用以下命令构建，生成带 `Monterey-Mirrors` 后缀的独立产物。
+
+```zsh
+EZNTFS_ARCHITECTURE=x86_64 EZNTFS_MONTEREY=1 scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
+```
+
+Monterey 包使用 AppKit 窗口和菜单栏，以及 macOS 12 提供的 XPC C API。应用和挂载服务双向校验签名。首次连接已确认的外置 NTFS 卷时默认尝试读写挂载，各盘可单独关闭自动挂载。服务仍会核对设备与分区身份，拒绝抢占由其他驱动管理的卷，并正常弹出占用解除后的磁盘。实际支持范围须等待 Intel macOS 12.7 实机验证。
+
+实机安装时解压 `Setup.zip` 并打开 `Install ezNTFS.app`。跟随安装器完成管理员授权、macFUSE 扩展许可及必要的重启，再打开 ezNTFS。若系统拒绝挂载服务访问外置磁盘，可从应用打开「完全磁盘访问权限」并在访达显示挂载服务，授权后点「重试挂载」。验证请使用可写入测试文件的实体 NTFS 外接盘。
+
 ## 本地化
 
 0.5.1 起，安装与驱动修复包在打开时检查 macFUSE。需要的版本来自随包驱动清单。已有兼容版本时可以继续。缺装时显示对应的官方发布地址，版本不符和安装不完整各有提示。真正写入系统目录前，安装器还会复核签名和动态库摘要。运行 `node --test scripts/check-installer.mjs` 检查三语提示和各分支。
+
+完整打包同时生成 `*-Setup.zip` 和独立 PKG。首次安装时，从 ZIP 中打开 `Install ezNTFS.app`。已有版本从「环境检查」启动同一流程。引导会校验官方 macFUSE 镜像的 SHA-256 和内含 PKG 的 Developer ID Installer 签名。修改 macFUSE 版本时要同步复核官方镜像及动态库摘要，再构建两种架构。可设置 `EZNTFS_TEST_MACFUSE_DMG` 指向官方镜像并运行 `swift test`，实测只读解包和签名验证。
+
+下载依次尝试 GitHub 官方发布、清华大学 TUNA 和南京大学的 MacPorts 文件镜像。每个来源使用相同的文件大小和 SHA-256 校验，通过后再验证内含安装包的签名。设置 `EZNTFS_TEST_MACFUSE_MIRRORS=1` 可模拟前序来源不可用并实际验证两个备用镜像。
+
+主 PKG 在受保护的系统目录保留本版主安装器，用于修复挂载服务。单独的驱动修复 PKG 随主应用分发。安装器再次检查磁盘占用，挂载服务的 XPC 客户端签名要求也继续生效。
 
 App 文案位于 `Sources/EzNTFSApp/Resources/*.lproj`，安装器文案位于 `scripts/installer/Resources/*.lproj`。语言使用稳定键，运行状态在显示时根据当前 App 语言渲染。macOS 安装器按自己的系统语言选择资源。驱动和系统返回的原始信息留在「技术详情」。提交文案改动前运行本地化检查，并在最窄窗口核对各语言的按钮、标题和错误提示。
 
@@ -44,6 +66,10 @@ EZNTFS_TEST_IMAGE="$fixture_dir/fixture.img" swift test
 ```
 
 未设置 `EZNTFS_TEST_IMAGE` 时镜像集成测试会跳过。安装前验证本地构建的驱动时，可指定 `EZNTFS_TEST_DRIVER`，或者给 `verify-image` 传入 `--driver <路径>`。测试完成后可删除自己创建的临时目录。
+
+使用 `EZNTFS_MONTEREY_PREVIEW=1` 代替 `EZNTFS_MONTEREY=1` 可生成包含空白 NTFS 镜像的开发测试包。安装后点「连接测试磁盘」，应用会创建私有副本，可按普通磁盘方式开启自动挂载和安全弹出。「验证读写」写入并校验一个合成文件，重新连接后再次点击会核对刚才写入的同一文件。实际读写挂载仍走系统服务，服务会确认镜像归当前登录用户所有。实盘包和默认构建均跳过虚拟磁盘。
+
+设置 `EZNTFS_TEST_IMAGE_TEMPLATE` 指向包内的 `EZNTFS-QA.img.gz`，以 `swift test -Xswiftc -DEZNTFS_MONTEREY_PREVIEW` 验证测试镜像的连接、弹出和重连身份。
 
 ## 图标
 

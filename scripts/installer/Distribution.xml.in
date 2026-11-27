@@ -4,7 +4,12 @@
   <options customize="never" require-scripts="true" hostArchitectures="@ARCHITECTURE@"/>
   <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
   <welcome file="Welcome.html" mime-type="text/html"/>
-  <installation-check script="checkMacFUSE() &amp;&amp; checkDriverUsage()"/>
+  <installation-check script="checkArchitecture() &amp;&amp; checkMacFUSE() &amp;&amp; checkDriverUsage()"/>
+  <volume-check>
+    <allowed-os-versions>
+      <os-version min="@MINIMUM_OS@"/>
+    </allowed-os-versions>
+  </volume-check>
   <script><![CDATA[
 function isExternal(entry) {
     var connection = entry["Protocol Characteristics"] || {};
@@ -21,6 +26,15 @@ function installationError(title, message) {
     my.result.message = message;
     system.log("ezNTFS: " + message);
     return false;
+}
+
+function checkArchitecture() {
+    var architecture = Number(system.sysctl("hw.optional.arm64")) === 1 ? "arm64" : "x86_64";
+    if (architecture === "@ARCHITECTURE@") {
+        return true;
+    }
+    return installationError(system.localizedString("architecture.title"),
+        system.localizedString("architecture.message").replace("{architecture}", architecture));
 }
 
 function checkMacFUSE() {
@@ -59,7 +73,8 @@ function checkMacFUSE() {
 }
 
 function checkDriverUsage() {
-    if (!system.files.fileExistsAtPath("/Library/Application Support/ezNTFS/Driver/installed.plist")) {
+    if (!system.files.fileExistsAtPath("/Library/Application Support/ezNTFS/Driver/installed.plist") &&
+        !system.files.fileExistsAtPath("/Library/Application Support/ezNTFS/service.plist")) {
         return true;
     }
 
@@ -79,9 +94,11 @@ function checkDriverUsage() {
   ]]></script>
   <choices-outline>
     <line choice="ezntfs"/>
+    @REINSTALL_LINE@
   </choices-outline>
   <choice id="ezntfs" title="ezNTFS" visible="false">
     <pkg-ref id="@IDENTIFIER@"/>
   </choice>
   <pkg-ref id="@IDENTIFIER@" version="@VERSION@">@COMPONENT@</pkg-ref>
+  @REINSTALL_CHOICE@
 </installer-gui-script>

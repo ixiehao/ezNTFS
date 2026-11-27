@@ -9,7 +9,7 @@ public struct EZError: LocalizedError, Sendable {
 
 public enum Tool {
     // Regular files drain both streams without risking a pipe deadlock.
-    public static func run(_ executable: String, _ arguments: [String], queryTimeout: Duration? = nil,
+    public static func run(_ executable: String, _ arguments: [String], queryTimeout: TimeInterval? = nil,
                            environment: [String: String] = [:], includeStandardError: Bool = false) throws -> Data {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ezntfs-process-\(UUID().uuidString)", isDirectory: true)
@@ -37,7 +37,7 @@ public enum Tool {
         let completion = DispatchSemaphore(value: 0)
         if queryTimeout != nil { process.terminationHandler = { _ in completion.signal() } }
         try process.run()
-        if let queryTimeout, completion.wait(timeout: .now() + queryTimeout.timeInterval) == .timedOut {
+        if let queryTimeout, completion.wait(timeout: .now() + queryTimeout) == .timedOut {
             if process.isRunning { process.terminate() }
             if completion.wait(timeout: .now() + 0.5) == .timedOut, process.isRunning {
                 _ = kill(process.processIdentifier, SIGKILL)
@@ -56,13 +56,6 @@ public enum Tool {
         let result = try Data(contentsOf: output)
         guard includeStandardError else { return result }
         return try result + Data([10]) + Data(contentsOf: errors)
-    }
-}
-
-private extension Duration {
-    var timeInterval: TimeInterval {
-        let (seconds, attoseconds) = components
-        return TimeInterval(seconds) + TimeInterval(attoseconds) / 1e18
     }
 }
 
@@ -103,9 +96,12 @@ public struct VolumeMount: Sendable, Equatable {
             var mounts: [String: VolumeMount] = [:]
             for entry in entries.prefix(Int(count)) {
                 let source = fileSystemString(entry.f_mntfromname)
-                guard let device = source.wholeMatch(of: #/\/dev\/r?(disk[0-9]+(?:s[0-9]+)?)/#)?.1 else { continue }
+                let prefix = source.hasPrefix("/dev/rdisk") ? "/dev/r" : "/dev/"
+                guard source.hasPrefix(prefix) else { continue }
+                let device = String(source.dropFirst(prefix.count))
+                guard Disks.isPartitionName(device) else { continue }
                 let (bytes, overflow) = UInt64(entry.f_bavail).multipliedReportingOverflow(by: UInt64(entry.f_bsize))
-                mounts[String(device)] = VolumeMount(
+                mounts[device] = VolumeMount(
                     path: fileSystemString(entry.f_mntonname), kind: fileSystemString(entry.f_fstypename),
                     readOnly: entry.f_flags & UInt32(MNT_RDONLY) != 0,
                     availableCapacity: overflow ? nil : Int64(exactly: bytes)

@@ -3,6 +3,7 @@ import EzNTFSCore
 import Foundation
 import OSLog
 import SystemConfiguration
+@preconcurrency import XPC
 
 @main
 enum Service {
@@ -12,16 +13,70 @@ enum Service {
             guard geteuid() == 0 else { throw EZError("挂载服务必须由系统启动。") }
             let identity = try MountServiceConfiguration.Identity.load()
             try SystemDriver.verifyCode(at: SystemDriver.serviceExecutable, requirement: identity.serviceRequirement)
-            let delegate = Listener()
-            let listener = NSXPCListener(machServiceName: MountServiceConfiguration.name)
-            listener.setConnectionCodeSigningRequirement(identity.clientRequirement)
-            listener.delegate = delegate
-            listener.resume()
-            withExtendedLifetime((listener, delegate)) { dispatchMain() }
+            if #available(macOS 13.0, *), MountServiceConfiguration.usesFoundationTransport {
+                let delegate = Listener()
+                let listener = NSXPCListener(machServiceName: MountServiceConfiguration.name)
+                listener.setConnectionCodeSigningRequirement(identity.clientRequirement)
+                listener.delegate = delegate
+                listener.resume()
+                withExtendedLifetime((listener, delegate)) { dispatchMain() }
+            } else {
+                let listener = try startLegacyListener(requirement: identity.clientRequirement)
+                withExtendedLifetime(listener) { dispatchMain() }
+            }
         } catch {
             logger.error("Could not start mount service: \(error.localizedDescription, privacy: .public)")
             exit(1)
         }
+    }
+
+    private static func startLegacyListener(requirement: String) throws -> xpc_connection_t {
+        let listener = xpc_connection_create_mach_service(MountServiceConfiguration.name, nil,
+                                                          UInt64(XPC_CONNECTION_MACH_SERVICE_LISTENER))
+        try LegacyMountIPC.requirePeer(listener, requirement)
+        let operations = DispatchQueue(label: "local.ezntfs.mount.operations")
+        xpc_connection_set_event_handler(listener) { event in
+            guard xpc_get_type(event) == XPC_TYPE_CONNECTION,
+                  (try? LegacyMountIPC.requirePeer(event, requirement)) != nil else { return }
+            xpc_connection_set_event_handler(event) { message in
+                guard xpc_get_type(message) == XPC_TYPE_DICTIONARY,
+                      let peer = xpc_dictionary_get_remote_connection(message),
+                      let response = xpc_dictionary_create_reply(message) else { return }
+                let user = xpc_connection_get_euid(peer)
+                guard user != 0 else { return }
+                let operation = xpc_dictionary_get_string(message, "operation").map { String(cString: $0) }
+                let operationHandler = Operations(user: user, queue: operations)
+                let reply = LegacyReply(peer: peer, response: response)
+                switch operation {
+                case "check":
+                    operationHandler.check(reply: reply.send)
+                case "mount":
+                    var size = 0
+                    guard let bytes = xpc_dictionary_get_data(message, "request", &size), (1...4096).contains(size) else {
+                        reply.send("挂载请求数据无效。")
+                        return
+                    }
+                    operationHandler.mount(request: Data(bytes: bytes, count: size), reply: reply.send)
+                default:
+                    reply.send("挂载请求类型无效。")
+                }
+            }
+            xpc_connection_resume(event)
+        }
+        xpc_connection_resume(listener)
+        return listener
+    }
+}
+
+// Each reply is sent exactly once. The XPC objects are retained until the serial operation finishes.
+private struct LegacyReply: @unchecked Sendable {
+    let peer: xpc_connection_t
+    let response: xpc_object_t
+
+    func send(_ error: String?) {
+        xpc_dictionary_set_bool(response, "ok", error == nil)
+        if let error { xpc_dictionary_set_string(response, "error", error) }
+        xpc_connection_send_message(peer, response)
     }
 }
 

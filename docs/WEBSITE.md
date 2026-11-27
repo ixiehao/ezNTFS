@@ -12,7 +12,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory dist/website
 
 `website/content.json` 集中维护版本、系统要求、依赖和三语正文。三语页面有实质内容更新时，将 `lastModified` 设为实际更新日期，供站点地图使用。发布新的安装包后更新版本与对应的真实 App 截图。网页、Markdown、站点地图和结构化数据均从同一份内容生成。截图来自隔离 App 的演示磁盘模式。窗口以及 Tabler 操作图标和原始许可证随站点提供。
 
-正式版和 Intel 预览版分别读取 `version` 与 `intelPreviewVersion`。更新前核对各自的公开 Release 与 PKG。三语图文指南的截图放在 `website/assets/guide/`，按 `动作-语言.png` 命名，分别展示挂载前、复制校验和已弹出三个模拟状态。
+Apple 芯片版与 Intel 版共用 `version`。更新时核对同一正式 Release 的两个 Setup ZIP 和最低系统版本。三语图文指南的截图放在 `website/assets/guide/`，按 `动作-语言.png` 命名，分别展示挂载前、复制校验和已弹出三个模拟状态。
 
 验收运行 `npm ci --prefix website --ignore-scripts` 和 `npx --prefix website playwright install chromium webkit`，然后运行 `npm test --prefix website`。检查覆盖三语、320 / 768 / 1440 像素、无 JavaScript 访问、语言链接、FAQ 键盘操作、可见截图和横向溢出。
 

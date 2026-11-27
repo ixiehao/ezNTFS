@@ -3,13 +3,16 @@ set -euo pipefail
 
 cd -- "${0:A:h:h}"
 project="$(pwd -P)"
-build_root="${EZNTFS_BUILD_ROOT:-$project/.build}"
+source scripts/build-target.zsh
+build_root="${EZNTFS_BUILD_ROOT:-$project/.build/package-$architecture-$deployment_target$artifact_suffix}"
 mkdir -p -- "$build_root"
 cache="$build_root/module-cache"
 mkdir -p -- "$cache" "$build_root/swiftpm-cache" "$build_root/swiftpm-config" "$build_root/swiftpm-security"
 export CLANG_MODULE_CACHE_PATH="$cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$cache"
-swift_options=(--scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
+swift_options=(--triple "$architecture-apple-macosx$deployment_target"
+               "${target_swift_flags[@]}"
+               --scratch-path "$build_root" --cache-path "$build_root/swiftpm-cache"
                --config-path "$build_root/swiftpm-config" --security-path "$build_root/swiftpm-security")
 if [[ "${EZNTFS_SWIFTPM_DISABLE_SANDBOX:-0}" == 1 ]]; then
   swift_options+=(--disable-sandbox)
@@ -18,8 +21,7 @@ fi
 /usr/bin/swift build "${swift_options[@]}" --configuration release -debug-info-format none
 binaries="$(/usr/bin/swift build "${swift_options[@]}" --configuration release -debug-info-format none --show-bin-path)"
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-architecture="$(/usr/bin/uname -m)"
-output="$project/dist/ezNTFS-$version-$architecture"
+output="$project/dist/ezNTFS-$version-$architecture$artifact_suffix"
 destination="$output/ezNTFS.app"
 if [[ -L "$project/dist" || -L "$output" || -e "$destination" || -L "$destination" ]]; then
   print -u2 -- "目标目录是符号链接，或本版本 App 已存在。"
@@ -37,7 +39,12 @@ trap cleanup EXIT
 app="$staging/ezNTFS.app"
 resources="$app/Contents/Resources"
 mkdir -p -- "$app/Contents/MacOS" "$resources"
-/usr/bin/xcrun actool --compile "$resources" --platform macosx --minimum-deployment-target 14.0 Resources/Tabler.xcassets Resources/Brand.xcassets
+/usr/bin/xcrun actool --compile "$resources" --platform macosx --minimum-deployment-target "$deployment_target" Resources/Tabler.xcassets Resources/Brand.xcassets
+if [[ "$deployment_target" == 12.7 ]]; then
+  # Monterey can load these PNG templates even when the asset catalog's SVG rendition is unavailable.
+  /bin/mkdir "$resources/IconTemplates"
+  /usr/bin/python3 scripts/render-icon-templates.py "$resources/IconTemplates"
+fi
 /usr/bin/install -m 644 Resources/Tabler/LICENSE "$resources/Tabler-Icons-LICENSE.txt"
 /usr/bin/install -m 644 LICENSE "$resources/ezNTFS-LICENSE.txt"
 for localization in Sources/EzNTFSApp/Resources/*.lproj; do
@@ -55,8 +62,17 @@ done
 /bin/cp -- "$iconset/icon_32x32.png" "$iconset/icon_16x16@2x.png"
 /usr/bin/iconutil -c icns "$iconset" -o "$resources/AppIcon.icns"
 /usr/bin/install -m 644 Resources/Info.plist "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set LSMinimumSystemVersion $deployment_target" "$app/Contents/Info.plist"
+if [[ -n "$bundle_build" ]]; then
+  /usr/libexec/PlistBuddy -c "Set CFBundleVersion $bundle_build" "$app/Contents/Info.plist"
+fi
+if [[ "$monterey_fixture" == yes ]]; then
+  /usr/bin/install -m 644 "${EZNTFS_TEST_IMAGE:?Missing bundled NTFS test image}" "$resources/EZNTFS-QA.img.gz"
+fi
 /usr/bin/install -m 755 "$binaries/ezNTFS" "$app/Contents/MacOS/ezNTFS"
 /usr/bin/install -m 755 "$binaries/ezntfs-tool" "$app/Contents/MacOS/ezntfs-tool"
+[[ "$(/usr/bin/lipo -archs "$app/Contents/MacOS/ezNTFS")" == "$architecture" ]]
+[[ "$(/usr/bin/lipo -archs "$app/Contents/MacOS/ezntfs-tool")" == "$architecture" ]]
 if [[ -n "${EZNTFS_DRIVER_REPAIR_PKG:-}" ]]; then
   /usr/bin/install -m 644 "$EZNTFS_DRIVER_REPAIR_PKG" "$resources/ezNTFS-Driver.pkg"
 fi

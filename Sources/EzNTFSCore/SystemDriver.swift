@@ -47,7 +47,7 @@ public enum SystemDriver {
     static func inspectDriver() throws -> (path: String, version: String) {
         try protectedPath(driverReceipt)
         let receipt = try PropertyListDecoder().decode(Receipt.self, from: Data(contentsOf: driverReceipt))
-        guard receipt.build.wholeMatch(of: /[A-Za-z0-9][A-Za-z0-9._-]{0,63}/) != nil,
+        guard receipt.build.range(of: #"\A[A-Za-z0-9][A-Za-z0-9._-]{0,63}\z"#, options: .regularExpression) != nil,
               Set(receipt.files.keys) == ["bin/ntfs-3g", "lib/libfuse.2.dylib"] else {
             throw EZError("系统驱动清单无效，请重新安装读写组件。")
         }

@@ -51,18 +51,22 @@ try {
             await page.locator('.hero-actions a[href="#download"]').click();
             assert.equal(page.url(), base + path + "#download");
             assert.equal(await page.locator("#download .download-card").count(), 2);
-            const pkg = await page.locator("[data-download]").getAttribute("href");
-            const stable = pkg.match(/^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v([\d.]+)\/ezNTFS-\1-arm64\.pkg$/);
+            const zip = await page.locator("[data-download]").getAttribute("href");
+            const stable = zip.match(/^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v([\d.]+)\/ezNTFS-\1-arm64-Setup\.zip$/);
             assert(stable);
             const app = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
-            const preview = page.locator("[data-intel-preview]");
-            assert(await preview.isVisible());
-            const intel = (await preview.getAttribute("href")).match(/^https:\/\/github\.com\/ixiehao\/ezNTFS\/releases\/download\/v([\d.]+-intel\.\d+)\/ezNTFS-\1-x86_64\.pkg$/);
-            assert(intel);
-            assert.equal(await page.locator("[data-intel-release]").getAttribute("href"),
-              `https://github.com/ixiehao/ezNTFS/releases/tag/v${intel[1]}`);
-            assert.equal(app.softwareVersion, stable[1]);
-            assert.match(app.operatingSystem, /Apple Silicon/);
+            const intel = page.locator("[data-intel-download]");
+            assert(await intel.isVisible());
+            const baseURL = `https://github.com/ixiehao/ezNTFS/releases`;
+            const version = stable[1];
+            assert.equal(await intel.getAttribute("href"),
+              `${baseURL}/download/v${version}/ezNTFS-${version}-x86_64-Monterey-Setup.zip`);
+            assert.equal(await page.locator("[data-intel-release]").getAttribute("href"), `${baseURL}/tag/v${version}`);
+            assert.deepEqual(app.downloadUrl, [zip, await intel.getAttribute("href")]);
+            assert.equal(app.softwareVersion, version);
+            assert.match(app.operatingSystem, /macOS 14.*Apple Silicon/);
+            assert.match(app.operatingSystem, /macOS 12\.7.*Intel/);
+            assert.equal(await page.locator('a[href$="/docs/INSTALL-INTEL.zh-CN.md"]').count(), 1);
             const screenshotLanguage = locale === "zh-CN" ? "zh-Hans" : locale;
             for (const step of ["mount", "copy", "eject"]) {
               const screenshot = page.locator(`.step-shot img[src$="/guide/${step}-${screenshotLanguage}.png"]`);
@@ -88,7 +92,6 @@ try {
             assert.equal(app.description, description);
             assert.equal(app.inLanguage, locale);
             assert.equal(app.url, site + path);
-            assert.equal(app.downloadUrl, pkg);
             assert.equal(app.sameAs, "https://github.com/ixiehao/ezNTFS");
             const metrics = await page.evaluate(() => ({
               overflow: document.documentElement.scrollWidth - innerWidth,

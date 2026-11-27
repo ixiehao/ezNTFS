@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "ezNTFS",
     defaultLocalization: "en",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v12)],
     products: [
         .executable(name: "ezNTFS", targets: ["EzNTFSApp"]),
         .executable(name: "ezntfs-tool", targets: ["EzNTFSCLI"]),

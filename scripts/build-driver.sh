@@ -13,7 +13,8 @@ fuse_version=5.5.0
 fuse_lib=/usr/local/lib/libfuse.2.dylib
 fuse_bundle=/Library/Filesystems/macfuse.fs
 fuse_signer='anchor apple generic and certificate leaf[subject.OU] = "3T5GSNBU6W"'
-cpu="$(/usr/bin/uname -m)"
+source "${0:A:h}/build-target.zsh"
+cpu="$architecture"
 
 [[ "$(/usr/bin/shasum -a 256 "$archive" | /usr/bin/cut -d ' ' -f 1)" == "$source_hash" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$fuse_bundle/Contents/Info.plist")" == "$fuse_version" ]]
@@ -27,12 +28,21 @@ trap 'rm -rf -- "$work"' EXIT
 # Build the NTFS code into the driver and omit gettext from its runtime dependencies.
 original_script="${0:A}"
 cd "$work/ntfs-3g-$version"
-export MACOSX_DEPLOYMENT_TARGET=14.0
+export MACOSX_DEPLOYMENT_TARGET="$deployment_target"
+# Autoconf may find Homebrew's libintl.h even with NLS disabled.
 CC=/usr/bin/clang \
+ac_cv_header_libintl_h=no \
+CFLAGS="-arch $cpu -g -O2" LDFLAGS="-arch $cpu -Wl,-headerpad_max_install_names" \
 FUSE_CFLAGS="-I/usr/local/include/fuse -D_FILE_OFFSET_BITS=64" \
-FUSE_LIBS="$fuse_lib" LDFLAGS="-Wl,-headerpad_max_install_names" \
+FUSE_LIBS="$fuse_lib" \
 ./configure --with-fuse=external --enable-static --disable-shared --disable-nls --disable-plugins
 /usr/bin/make -j "$(/usr/sbin/sysctl -n hw.ncpu)"
+if [[ -n "${EZNTFS_TEST_IMAGE_OUTPUT:-}" ]]; then
+  [[ "$monterey_fixture" == yes ]]
+  /usr/bin/truncate -s 64m "$work/EZNTFS-QA.img"
+  ntfsprogs/mkntfs -F -Q -s 512 -L EZNTFS-QA "$work/EZNTFS-QA.img"
+  /usr/bin/gzip -n -c "$work/EZNTFS-QA.img" > "$EZNTFS_TEST_IMAGE_OUTPUT"
+fi
 
 minimum_os="$(/usr/bin/xcrun vtool -arch "$cpu" -show-build src/ntfs-3g | /usr/bin/awk '$1 == "minos" { print $2 }')"
 if [[ "$minimum_os" != "$MACOSX_DEPLOYMENT_TARGET" ]]; then
@@ -55,15 +65,16 @@ fi
 /usr/bin/codesign --force --sign "$identity" "${sign_options[@]}" --identifier local.ezntfs.ntfs3g "$output/bin/ntfs-3g"
 /usr/bin/codesign --verify --strict "$output/bin/ntfs-3g"
 /usr/bin/install -m 644 "$archive" "$output/source/ntfs-3g-$version.tgz"
-/usr/bin/install -m 644 COPYING COPYING.LIB "$original_script" "${original_script:h}/NTFS3G.entitlements" "$output/source"
-/usr/bin/python3 - "$output" "$version" "$fuse_version" <<'PY'
+/usr/bin/install -m 644 COPYING COPYING.LIB "$original_script" "${original_script:h}/"{NTFS3G.entitlements,build-target.zsh} "$output/source"
+/usr/bin/python3 - "$output" "$version" "$fuse_version" "$cpu" <<'PY'
 import hashlib
 import plistlib
 import subprocess
 import sys
 from pathlib import Path
 
-root, version, fuse = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+output, version, fuse, architecture = sys.argv[1:]
+root = Path(output)
 driver = root / "bin/ntfs-3g"
 lib = root / "lib/libfuse.2.dylib"
 fuse_path = "@loader_path/../lib/libfuse.2.dylib"
@@ -71,8 +82,7 @@ fuse_framework = "/Library/Filesystems/macfuse.fs/Contents/Frameworks/MFMount.fr
 
 for binary, expected, skip in [(driver, {fuse_path}, 1), (lib, {fuse_framework}, 2)]:
     dependencies = subprocess.check_output(
-        ["/usr/bin/otool", "-arch", "arm64" if sys.platform == "darwin" and __import__("platform").machine() == "arm64" else "x86_64",
-         "-L", str(binary)], text=True
+        ["/usr/bin/otool", "-arch", architecture, "-L", str(binary)], text=True
     ).splitlines()[skip:]
     loaded = {line.strip().split(" (", 1)[0] for line in dependencies}
     unapproved = {path for path in loaded if not path.startswith(("/usr/lib/", "/System/Library/"))} - expected

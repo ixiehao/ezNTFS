@@ -1,8 +1,8 @@
 {
-  "version": "0.5.2",
-  "intelPreviewVersion": "0.5.2-intel.1",
-  "lastModified": "2026-11-26",
+  "version": "0.5.3",
+  "lastModified": "2026-11-27",
   "minimumMacOS": "14",
+  "minimumIntelMacOS": "12.7",
   "macFUSE": "5.5.0",
   "languages": {
     "en": {
@@ -48,9 +48,9 @@
       ],
       "installTitle": "Install ezNTFS",
       "installSteps": [
-        "Open the ezNTFS PKG. The installer checks for macFUSE {fuse} and continues if it’s installed.",
-        "Approve installation of the mount service when macOS asks.",
-        "Connect your NTFS drive and choose Mount Read-Write."
+        "Unzip the download for your Mac and open Install ezNTFS.",
+        "Choose Install or Repair Dependencies. The installer checks for macFUSE {fuse}, then guides you through the required approvals.",
+        "Open ezNTFS, connect your NTFS drive, and wait for Read-Write. You can also click Mount Read-Write."
       ],
       "macfuseLink": "Get macFUSE from the official release page",
       "signTitle": "Package and permissions",
@@ -68,7 +68,7 @@
         ],
         [
           "Is ezNTFS free?",
-          "Yes. ezNTFS is a free NTFS tool for Mac, published under the MIT license. The stable download is for Apple silicon. An Intel Mac preview is also available."
+          "Yes. ezNTFS is free and open source under the MIT license, with stable downloads for Apple silicon and Intel Macs."
         ],
         [
           "What if my drive is still read-only?",
@@ -76,7 +76,7 @@
         ],
         [
           "Can I mount drives automatically?",
-          "Turn on Mount on Connection in Settings, then enable Auto Mount for each drive you use."
+          "Enable Mount on Connection in Settings and check the Auto Mount switch for the drive. Drives without a stable identifier can be mounted manually."
         ],
         [
           "Are my files uploaded?",
@@ -86,21 +86,20 @@
       "license": "MIT licensed",
       "macfuseMissing": "Haven’t installed macFUSE?",
       "macfuseOnce": "Install macFUSE {fuse} once, then reopen the ezNTFS installer. You can reuse it when upgrading ezNTFS.",
-      "intelPreviewNote": "Intel Mac support is in testing. Feedback is welcome.",
-      "intelPreviewLink": "Download the Intel preview",
       "downloadNav": "Download",
       "downloadTitle": "Download ezNTFS",
       "downloadChoose": "Choose your download",
       "stableChip": "Apple silicon",
       "stableLabel": "Stable",
-      "previewLabel": "Preview",
-      "guideNote": "These screenshots use a demo NTFS drive."
+      "guideNote": "These screenshots use a demo NTFS drive.",
+      "intelDownload": "Download for Intel",
+      "intelGuide": "Intel installation guide (Chinese)"
     },
     "zh-Hans": {
       "name": "简体中文",
       "directory": "zh/",
       "title": "ezNTFS｜Mac 外置 NTFS 硬盘读写工具，免费开源",
-      "description": "ezNTFS 是免费开源的原生 macOS 应用。无需格式化，就能在访达里读写 Windows 的 NTFS 移动硬盘和 U 盘。提供 Apple 芯片正式版和 Intel Mac 预览版。",
+      "description": "ezNTFS 是免费开源的原生 macOS 应用。无需格式化，就能在访达里读写 Windows 的 NTFS 移动硬盘和 U 盘。支持 Apple 芯片 Mac 和 Intel Mac。",
       "skip": "跳到正文",
       "language": "语言",
       "features": "图文上手",
@@ -139,9 +138,9 @@
       ],
       "installTitle": "安装 ezNTFS",
       "installSteps": [
-        "打开 ezNTFS 安装包。安装器自动检查 macFUSE {fuse}，已安装即可继续。",
-        "按 macOS 提示授权安装挂载服务。",
-        "接入 NTFS 硬盘，点「挂载读写」。"
+        "下载适合这台 Mac 的版本，解压后打开「Install ezNTFS」。",
+        "点「安装或修复依赖」。安装器会检查 macFUSE {fuse}，并引导你完成所需授权。",
+        "打开 ezNTFS，插入 NTFS 硬盘，等待状态显示「可读写」。也可以手动点「挂载读写」。"
       ],
       "macfuseLink": "前往 macFUSE 官方发布页",
       "signTitle": "安装包与权限",
@@ -159,7 +158,7 @@
         ],
         [
           "ezNTFS 免费吗？",
-          "免费。ezNTFS 使用 MIT 许可证开源。Apple 芯片 Mac 可下载正式版，Intel Mac 可试用预览版。"
+          "免费。ezNTFS 使用 MIT 许可证开源，Apple 芯片和 Intel Mac 均提供正式版。"
         ],
         [
           "装了 ezNTFS，为什么还是无法写入？",
@@ -167,7 +166,7 @@
         ],
         [
           "可以自动挂载硬盘吗？",
-          "在设置中开启「插盘后自动挂载」，再为常用硬盘逐个开启「自动挂载」。"
+          "在设置中开启「插盘后自动挂载」，并确认这块盘的「自动挂载」已打开。缺少稳定标识的硬盘可手动挂载。"
         ],
         [
           "会上传文件吗？",
@@ -177,15 +176,14 @@
       "license": "MIT 开源许可证",
       "macfuseMissing": "这台 Mac 还没装 macFUSE？",
       "macfuseOnce": "macFUSE {fuse} 只需安装一次。装好后重新打开 ezNTFS 安装包，升级时可继续使用。",
-      "intelPreviewNote": "正式支持正在准备中，欢迎试用和反馈。",
-      "intelPreviewLink": "下载 Intel 预览版",
       "downloadNav": "下载",
       "downloadTitle": "下载 ezNTFS",
       "downloadChoose": "选择下载版本",
       "stableChip": "Apple 芯片",
       "stableLabel": "正式版",
-      "previewLabel": "预览版",
-      "guideNote": "下方截图使用模拟的 NTFS 硬盘。"
+      "guideNote": "下方截图使用模拟的 NTFS 硬盘。",
+      "intelDownload": "下载 Intel 版",
+      "intelGuide": "Intel Mac 图文安装教程"
     },
     "ja": {
       "name": "日本語",
@@ -230,9 +228,9 @@
       ],
       "installTitle": "ezNTFS をインストール",
       "installSteps": [
-        "ezNTFS の PKG を開きます。macFUSE {fuse} がインストール済みなら、そのまま続けられます。",
-        "macOS の案内に従い、マウントサービスのインストールを許可します。",
-        "NTFS ドライブを接続し、「読み書きでマウント」を選びます。"
+        "Mac に合った版をダウンロードして解凍し、「Install ezNTFS」を開きます。",
+        "「依存コンポーネントをインストールまたは修復」を選びます。macFUSE {fuse} の確認後、必要な許可を案内します。",
+        "ezNTFS を開いて NTFS ドライブを接続し、「読み書き可」と表示されるまで待ちます。手動でマウントすることもできます。"
       ],
       "macfuseLink": "macFUSE の公式リリースページを開く",
       "signTitle": "インストーラとアクセス権",
@@ -250,7 +248,7 @@
         ],
         [
           "ezNTFS は無料ですか？",
-          "はい。MIT ライセンスで公開しています。Apple シリコン Mac 向けの正式版と、Intel Mac 向けのプレビュー版をダウンロードできます。"
+          "はい。ezNTFS は MIT ライセンスの無料アプリです。Apple シリコンと Intel Mac 向けの正式版を配布しています。"
         ],
         [
           "インストール後も書き込めないときは？",
@@ -258,7 +256,7 @@
         ],
         [
           "自動でマウントできますか？",
-          "設定で「接続時に自動マウント」を有効にし、ドライブごとに「自動マウント」をオンにします。"
+          "設定で「接続時に自動マウント」を有効にし、対象ドライブの「自動マウント」を確認します。安定した識別子のないドライブは手動でマウントできます。"
         ],
         [
           "ファイルはアップロードされますか？",
@@ -268,15 +266,14 @@
       "license": "MIT ライセンス",
       "macfuseMissing": "macFUSE をまだインストールしていない場合",
       "macfuseOnce": "macFUSE {fuse} を初回にインストールし、ezNTFS のインストーラを開き直します。ezNTFS の更新時もそのまま使えます。",
-      "intelPreviewNote": "Intel Mac の正式対応に向けて準備中です。お試しとフィードバックを歓迎します。",
-      "intelPreviewLink": "Intel プレビューをダウンロード",
       "downloadNav": "ダウンロード",
       "downloadTitle": "ezNTFS をダウンロード",
       "downloadChoose": "ダウンロードを選ぶ",
       "stableChip": "Apple シリコン",
       "stableLabel": "正式版",
-      "previewLabel": "プレビュー",
-      "guideNote": "以下の画面にはデモ用の NTFS ドライブを使用しています。"
+      "guideNote": "以下の画面にはデモ用の NTFS ドライブを使用しています。",
+      "intelDownload": "Intel 版をダウンロード",
+      "intelGuide": "Intel Mac インストールガイド（中国語）"
     }
   }
 }

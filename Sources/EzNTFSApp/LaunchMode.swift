@@ -1,10 +1,19 @@
+import Foundation
+
 enum LaunchMode {
     case normal
+    case setup
     case previewWindow(AppModel.Preview)
     case render(path: String, AppModel.Preview, dark: Bool, narrow: Bool)
     case invalid
 
-    static let current = parse(Array(CommandLine.arguments.dropFirst()))
+    static let current: LaunchMode = Bundle.main.object(forInfoDictionaryKey: "EZNTFSSetup") as? Bool == true
+        ? .setup : parse(Array(CommandLine.arguments.dropFirst()))
+
+    var isSetup: Bool {
+        if case .setup = self { return true }
+        return false
+    }
 
     static func parse(_ arguments: [String]) -> LaunchMode {
         if arguments.contains(where: { $0.hasPrefix("--preview-window=") || $0.hasPrefix("--render-preview=") }) {

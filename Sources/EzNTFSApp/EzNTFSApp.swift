@@ -3,9 +3,10 @@ import EzNTFSCore
 import SwiftUI
 
 @MainActor
-final class Lifecycle: NSObject, NSApplicationDelegate {
+class Lifecycle: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if case .normal = LaunchMode.current { AppModel.shared.startMonitoring() }
+        if LaunchMode.current.isSetup { AppModel.shared.startSetup() }
     }
 
     func showAboutPanel(language: AppLanguage) {
@@ -28,25 +29,26 @@ final class Lifecycle: NSObject, NSApplicationDelegate {
         }
         let site = URL(string: "https://ixiehao.github.io/ezNTFS/")!
         let website: URL = switch language.locale.identifier {
-        case "zh-Hans": site.appending(path: "zh", directoryHint: .isDirectory)
-        case "ja": site.appending(path: "ja", directoryHint: .isDirectory)
+        case "zh-Hans": site.appendingPathComponent("zh", isDirectory: true)
+        case "ja": site.appendingPathComponent("ja", isDirectory: true)
         default: site
         }
         let project = ReleaseCheck.projectPage
         appendLink("ixiehao", to: project.deletingLastPathComponent())
         credits.append(NSAttributedString(string: "\n\n" + language.text("about.local") + "\n", attributes: body))
-        appendLink(language.text("about.license"), to: project.appending(path: "blob/main/LICENSE"))
+        appendLink(language.text("about.license"), to: project.appendingPathComponent("blob/main/LICENSE"))
         credits.append(NSAttributedString(string: "\n\n", attributes: body))
         appendLink(language.text("about.website"), to: website)
         credits.append(NSAttributedString(string: "  ·  ", attributes: body))
         appendLink(language.text("about.source"), to: project)
         credits.append(NSAttributedString(string: "  ·  ", attributes: body))
-        appendLink(language.text("about.feedback"), to: project.appending(path: "issues"))
+        appendLink(language.text("about.feedback"), to: project.appendingPathComponent("issues"))
         NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
         NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        if LaunchMode.current.isSetup { return true }
         sender.setActivationPolicy(.accessory)
         return false
     }
@@ -58,16 +60,29 @@ final class Lifecycle: NSObject, NSApplicationDelegate {
 }
 
 @main
+@MainActor
+enum AppEntry {
+    static func main() {
+        #if !EZNTFS_MONTEREY_PREVIEW && !EZNTFS_MONTEREY
+        if #available(macOS 13.0, *) {
+            EzNTFSApp.main()
+            return
+        }
+        #endif
+        LegacyApplication.run()
+    }
+}
+
+@available(macOS 13.0, *)
 struct EzNTFSApp: App {
     @NSApplicationDelegateAdaptor(Lifecycle.self) private var lifecycle
     @StateObject private var model = LaunchMode.current.previewWindow.map { AppModel(preview: $0) } ?? .shared
     @Environment(\.openWindow) private var openWindow
-    @State private var checkingForUpdates = false
-    @State private var availableRelease: URL?
+    @StateObject private var updates = AppUpdates()
 
     init() {
         switch LaunchMode.current {
-        case .normal, .previewWindow:
+        case .normal, .previewWindow, .setup:
             return
         case .invalid:
             FileHandle.standardError.write(Data("ezNTFS: Invalid preview arguments.\n".utf8))
@@ -77,7 +92,7 @@ struct EzNTFSApp: App {
         }
     }
 
-    private static func renderPreview(path: String, sample: AppModel.Preview, dark: Bool, narrow: Bool) -> Never {
+    static func renderPreview(path: String, sample: AppModel.Preview, dark: Bool, narrow: Bool) -> Never {
         let scheme: ColorScheme = dark ? .dark : .light
         let width: CGFloat = narrow ? 565 : 660
         let appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
@@ -86,6 +101,7 @@ struct EzNTFSApp: App {
             let view = WorkspaceView(model: AppModel(preview: sample))
                 .frame(width: width, height: 368)
                 .environment(\.colorScheme, scheme)
+                .background(scheme == .dark ? Color(nsColor: .windowBackgroundColor) : .white)
             let renderer = ImageRenderer(content: view)
             renderer.scale = 2
             if let image = renderer.cgImage {
@@ -102,11 +118,20 @@ struct EzNTFSApp: App {
     }
 
     var body: some Scene {
-        Window("ezNTFS", id: "workspace") {
-            WorkspaceView(model: model)
-                .onAppear { NSApp.setActivationPolicy(.regular) }
+        workspace
+        statusMenu
+    }
+
+    private var workspace: some Scene {
+        Window(model.setup ? model.language.text("setup.title") : "ezNTFS", id: "workspace") {
+            if model.setup {
+                DependencyHealthView(model: model)
+            } else {
+                WorkspaceView(model: model)
+                    .onAppear { NSApp.setActivationPolicy(.regular) }
+            }
         }
-        .defaultSize(width: 660, height: 560)
+        .defaultSize(width: model.setup ? 510 : 660, height: model.setup ? 365 : 560)
         .windowToolbarStyle(.unifiedCompact)
         .windowResizability(.contentMinSize)
         .commands {
@@ -130,11 +155,14 @@ struct EzNTFSApp: App {
                     showWorkspace()
                     model.openDependencyHealth()
                 }
+                .disabled(model.setup)
                 viewReleaseButton
             }
         }
+    }
 
-        MenuBarExtra {
+    private var statusMenu: some Scene {
+        MenuBarExtra(isInserted: .constant(!model.setup)) {
             Button(model.language.text("menu.open"), action: showWorkspace)
             Divider()
             if model.disks.isEmpty {
@@ -172,29 +200,31 @@ struct EzNTFSApp: App {
     }
 
     private var checkUpdatesButton: some View {
-        Button(model.language.text("update.check"), action: checkForUpdates)
-            .disabled(checkingForUpdates)
+        Button(model.language.text("update.check")) {
+            Task { await updates.check(language: model.language) }
+        }
+        .disabled(updates.checking)
     }
 
     @ViewBuilder private var viewReleaseButton: some View {
-        if let availableRelease {
+        if let availableRelease = updates.availableRelease {
             Button(model.language.text("update.releasePage")) { NSWorkspace.shared.open(availableRelease) }
         }
     }
 
-    private func checkForUpdates() {
-        guard !checkingForUpdates else { return }
-        checkingForUpdates = true
-        Task { @MainActor in
-            defer { checkingForUpdates = false }
-            let installedVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-            let result = await ReleaseCheck.latest(installedVersion: installedVersion)
-            await presentUpdateResult(result, installedVersion: installedVersion)
-        }
-    }
+}
 
-    private func presentUpdateResult(_ result: ReleaseCheck, installedVersion: String) async {
-        let language = model.language
+@MainActor
+final class AppUpdates: ObservableObject {
+    @Published private(set) var checking = false
+    @Published private(set) var availableRelease: URL?
+
+    func check(language: AppLanguage) async {
+        guard !checking else { return }
+        checking = true
+        defer { checking = false }
+        let installedVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        let result = await ReleaseCheck.latest(installedVersion: installedVersion)
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = language.text("update.title")

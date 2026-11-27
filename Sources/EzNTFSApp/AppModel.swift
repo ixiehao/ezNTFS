@@ -4,21 +4,34 @@ import Darwin
 import EzNTFSCore
 import Foundation
 import OSLog
+import Security
 import ServiceManagement
 import SwiftUI
 
 @MainActor
 final class AppModel: ObservableObject {
-    static let shared = AppModel()
+    static let shared = AppModel(setup: LaunchMode.current.isSetup)
+    static let automaticallyMountsNewDisks: Bool = {
+        #if EZNTFS_MONTEREY
+        true
+        #else
+        false
+        #endif
+    }()
     private let logger = Logger(subsystem: "local.ezntfs.app", category: "mount")
     private static let checkingMountMessage: InterfaceMessage = "health.checkingMount"
     private static let mountNotReadyMessage: InterfaceMessage = "health.mountNotReady"
-    enum Activity: Equatable { case mounting, ejecting, choosingCopy, copying }
-    enum Preview: String { case ready, readOnly, copying, disconnected, dependencies, multiple, permissionDenied }
+    enum Activity: Equatable { case mounting, ejecting, choosingCopy, copying, testingImage }
+    enum Preview: String {
+        case ready, readOnly, copying, disconnected, dependencies, multiple, permissionDenied
+    }
+    enum LoginStatus { case notRegistered, enabled, requiresApproval }
 
     @Published private(set) var disks: [ExternalVolume] = []
     @Published private(set) var selection: UInt64?
     @Published private(set) var remembered: Set<DiskFingerprint> = []
+    @Published private var automaticMountExclusions: Set<DiskFingerprint> = []
+    private var recognizedVolumes: Set<DiskFingerprint> = []
     @Published private(set) var ejectedDevices: Set<UInt64> = []
     @Published private(set) var activityVolume: UInt64?
     @Published private(set) var activity: Activity? {
@@ -36,13 +49,30 @@ final class AppModel: ObservableObject {
     @Published private(set) var isError = false
     @Published private(set) var diagnostic: String?
     @Published private(set) var needsDiskPermission = false
+    @Published private(set) var needsExtensionApproval = false
+    @Published private(set) var failedMountID: UInt64?
     @Published private(set) var autoMount = true
-    @Published private(set) var loginStatus = SMAppService.Status.notRegistered
+    @Published private(set) var loginStatus = LoginStatus.notRegistered
 
     @Published var dependencySheetPresented = false
     @Published private(set) var dependencyReport: DependencyReport?
     @Published private(set) var checkingDependencies = false
-    @Published private(set) var dependencyInstallError: InterfaceMessage?
+    @Published private(set) var dependencyNotice: InterfaceMessage?
+    @Published private(set) var preparingDependency = false
+    @Published private(set) var needsMainInstall = false
+    let setup: Bool
+    var setupArchitectureMatches: Bool {
+        #if arch(x86_64)
+        var translated: Int32 = 0
+        var length = MemoryLayout<Int32>.size
+        return sysctlbyname("sysctl.proc_translated", &translated, &length, nil, 0) != 0 || translated != 1
+        #else
+        return true
+        #endif
+    }
+    private var awaitingDependency: DependencyInstallStep?
+    private var downloadedFUSEInstaller: URL?
+    private let resumeFUSEKey = "resumeAfterMacFUSE"
 
     private var operationRevision: UInt64 = 0
     private var refreshInProgress = false
@@ -51,6 +81,7 @@ final class AppModel: ObservableObject {
     private var diskEvents: DiskEvents?
     private var nigateExitObserver: AnyCancellable?
     private var activationObserver: AnyCancellable?
+    private var installerExitObserver: AnyCancellable?
     private var scheduledRefresh: Task<Void, Never>?
     private var refreshPending = false
     private var sleeping = false
@@ -61,6 +92,81 @@ final class AppModel: ObservableObject {
     private var copyWorker: Task<CopyReceipt, Error>?
     private let defaults = UserDefaults.standard
     private let preview: Bool
+    #if EZNTFS_MONTEREY_PREVIEW
+    private let testImage = PreviewTestImage()
+    private let testImageBatchKey = "montereyTestImageBatch"
+    @Published private(set) var testImageFingerprint: DiskFingerprint?
+    private var testImageBatch: String?
+
+    var attachedTestImage: ExternalVolume? {
+        disks.first { $0.fingerprint == testImageFingerprint }
+    }
+
+    func isManagedTestImage(_ volume: ExternalVolume) -> Bool {
+        volume.fingerprint == testImageFingerprint
+    }
+
+    func connectTestImage() {
+        guard !preview, !sleeping, activity == nil else { return }
+        guard !preparingDependency, awaitingDependency == nil, dependencyReport?.canMountReadWrite == true else {
+            openDependencyHealth()
+            return
+        }
+        guard let template = Bundle.main.url(forResource: "EZNTFS-QA.img", withExtension: "gz") else {
+            setMessage("testImage.missing", error: true)
+            return
+        }
+        activity = .testingImage
+        setMessage("testImage.connecting")
+        Task {
+            do {
+                let image = testImage
+                let volume = try await Task.detached(priority: .userInitiated) {
+                    try image.connect(template: template)
+                }.value
+                if testImageFingerprint != volume.fingerprint {
+                    testImageBatch = nil
+                    defaults.removeObject(forKey: testImageBatchKey)
+                }
+                testImageFingerprint = volume.fingerprint
+                selection = volume.id
+                setMessage(nil)
+            } catch {
+                setMessage("testImage.connectFailed", error: true, diagnostic: error.localizedDescription)
+            }
+            activity = nil
+            await refresh()
+        }
+    }
+
+    func verifyTestImage(_ volume: ExternalVolume) {
+        guard !preview, activity == nil, isManagedTestImage(volume), volume.isWritable else { return }
+        let previous = testImageBatch
+        activity = .testingImage
+        setMessage("testImage.verifying")
+        Task {
+            do {
+                let image = testImage
+                let result = try await Task.detached(priority: .userInitiated) {
+                    if let previous {
+                        try image.verifySample(in: previous, on: volume)
+                        return previous
+                    }
+                    return try image.writeSample(to: volume)
+                }.value
+                testImageBatch = result
+                defaults.set([volume.fingerprint.serial: result], forKey: testImageBatchKey)
+                setMessage(previous == nil ? "testImage.writePassed" : "testImage.readPassed")
+            } catch {
+                setMessage("testImage.verifyFailed", error: true, diagnostic: error.localizedDescription)
+                testImageBatch = nil
+                defaults.removeObject(forKey: testImageBatchKey)
+            }
+            activity = nil
+            await refresh()
+        }
+    }
+    #endif
 
     private struct StoredEjections: Codable {
         let bootSession: String
@@ -72,16 +178,28 @@ final class AppModel: ObservableObject {
         let usbConnection: UInt64
     }
 
-    init(preview: Preview? = nil) {
+    init(preview: Preview? = nil, setup: Bool = false) {
         self.preview = preview != nil
-        bootSession = preview == nil ? Self.currentBootSession() : nil
+        self.setup = setup
+        bootSession = preview == nil && !setup ? Self.currentBootSession() : nil
         language = defaults.string(forKey: "interfaceLanguage").flatMap(AppLanguage.init(rawValue:)) ?? .system
         if let preview {
             configurePreview(preview)
             return
         }
+        guard !setup else { return }
         remembered = RememberedDisks.load(defaults)
+        if Self.automaticallyMountsNewDisks {
+            automaticMountExclusions = RememberedDisks.loadExclusions(defaults)
+            recognizedVolumes = RememberedDisks.loadRecognizedVolumes(defaults)
+        }
         autoMount = defaults.object(forKey: "autoMount") as? Bool ?? true
+        #if EZNTFS_MONTEREY_PREVIEW
+        testImageFingerprint = testImage.fingerprint
+        if let testImageFingerprint {
+            testImageBatch = defaults.dictionary(forKey: testImageBatchKey)?[testImageFingerprint.serial] as? String
+        }
+        #endif
         restoreEjections()
     }
 
@@ -92,8 +210,7 @@ final class AppModel: ObservableObject {
         if preview == .dependencies {
             dependencyReport = DependencyReport(macFUSE: .ready(path: "/example/macFUSE", version: "5.5.0"),
                                                 ntfs3g: .unavailable("Preview: driver verification failed."),
-                                                service: .missing,
-                                                driverUsage: .inUse)
+                                                service: .missing)
             dependencySheetPresented = true
             return
         }
@@ -104,7 +221,8 @@ final class AppModel: ObservableObject {
         let mount = VolumeMount(path: path, kind: readOnly ? "ntfs" : "macfuse",
                                 readOnly: readOnly, availableCapacity: 497_320_000_000)
         disks = [ExternalVolume(connection: 1, deviceConnection: 2, fingerprint: identity, partition: "disk4s1",
-                                wholeDisk: "disk4", name: "TOSHIBA EXT", mount: mount, fileSystemConfirmed: true)]
+                                wholeDisk: "disk4", name: "TOSHIBA EXT",
+                                mount: mount, fileSystemConfirmed: true)]
         selection = 1
         if preview == .multiple || preview == .permissionDenied {
             let second = DiskFingerprint(serial: "PREVIEW-2", vendor: 1, product: 2,
@@ -169,13 +287,7 @@ final class AppModel: ObservableObject {
                     MainActor.assumeIsolated { self?.scheduleRefresh() }
                 }
         }
-        activationObserver = NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
-            .sink { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, self.dependencySheetPresented || self.dependencyReport?.canMountReadWrite != true else { return }
-                    await self.checkDependencies()
-                }
-            }
+        observeDependencyReturn()
         diskEvents = DiskEvents(onChange: { [weak self] in self?.scheduleRefresh() },
                                 onSleep: { [weak self] in self?.prepareForSleep() },
                                 onWake: { [weak self] in self?.refreshAfterWake() })
@@ -190,7 +302,7 @@ final class AppModel: ObservableObject {
     private func scheduleRefresh() {
         guard scheduledRefresh == nil else { return }
         scheduledRefresh = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(150))
+            try? await Task.sleep(nanoseconds: 150_000_000)
             guard let self else { return }
             scheduledRefresh = nil
             await refresh()
@@ -218,7 +330,7 @@ final class AppModel: ObservableObject {
             return
         }
         refreshPending = false
-        let currentLoginStatus = SMAppService.mainApp.status
+        let currentLoginStatus = Self.readLoginStatus()
         if loginStatus != currentLoginStatus { loginStatus = currentLoginStatus }
 
         let connectedEjections = ejectedDevices.filter { Disks.isDeviceConnected($0) }
@@ -233,7 +345,12 @@ final class AppModel: ObservableObject {
             if refreshPending && activity == nil && !sleeping { scheduleRefresh() }
         }
         let excluded = ejectedDevices
-        let known = remembered.union(disks.map(\.fingerprint))
+        let prior = remembered.union(recognizedVolumes).union(disks.map(\.fingerprint))
+        #if EZNTFS_MONTEREY_PREVIEW
+        let known = prior.union([testImageFingerprint].compactMap { $0 })
+        #else
+        let known = prior
+        #endif
         let revision = operationRevision
         let result = await Task.detached(priority: .utility) {
             Result { try Disks.scan(known: known, excluding: excluded) }
@@ -248,7 +365,7 @@ final class AppModel: ObservableObject {
             if disks != inventory { disks = inventory }
             if selected == nil { selection = disks.first?.id }
             if displayingScanError { setMessage(nil) }
-            if autoMount, let target = Disks.automaticCandidates(disks, remembered: remembered,
+            if autoMount, let target = Disks.automaticCandidates(disks, policy: automaticMountPolicy,
                                                                 attempted: sessionAttempts).first {
                 startMount(target)
             }
@@ -297,7 +414,7 @@ final class AppModel: ObservableObject {
     }
 
     func automaticMountRestriction(for disk: ExternalVolume) -> String? {
-        if !disk.fingerprint.canRemember { return language.text("error.noIdentity") }
+        if !Self.automaticallyMountsNewDisks && !disk.fingerprint.canRemember { return language.text("error.noIdentity") }
         if disks.contains(where: { $0.id != disk.id && $0.fingerprint == disk.fingerprint }) {
             return language.text("error.duplicateIdentity")
         }
@@ -305,15 +422,31 @@ final class AppModel: ObservableObject {
         return nil
     }
 
-    func setRemembered(_ enabled: Bool, diskID: UInt64) {
+    private var automaticMountPolicy: AutomaticMountPolicy {
+        Self.automaticallyMountsNewDisks ? .connectedExcept(automaticMountExclusions) : .remembered(remembered)
+    }
+
+    func automaticMountEnabled(for disk: ExternalVolume) -> Bool {
+        automaticMountPolicy.includes(disk.fingerprint)
+    }
+
+    func setDiskAutomaticMount(_ enabled: Bool, diskID: UInt64) {
         guard !preview, activity == nil, let disk = disks.first(where: { $0.id == diskID }),
               automaticMountRestriction(for: disk) == nil else { return }
-        var updated = remembered
-        if enabled { updated.insert(disk.fingerprint) }
-        else { updated.remove(disk.fingerprint) }
         do {
-            try RememberedDisks.save(updated, to: defaults)
-            remembered = updated
+            if Self.automaticallyMountsNewDisks {
+                var exclusions = automaticMountExclusions
+                if enabled { exclusions.remove(disk.fingerprint) }
+                else { exclusions.insert(disk.fingerprint) }
+                try RememberedDisks.saveExclusions(exclusions, to: defaults)
+                automaticMountExclusions = exclusions
+            } else {
+                var updated = remembered
+                if enabled { updated.insert(disk.fingerprint) }
+                else { updated.remove(disk.fingerprint) }
+                try RememberedDisks.save(updated, to: defaults)
+                remembered = updated
+            }
             setMessage(InterfaceMessage(enabled ? "notice.autoMountOn" : "notice.autoMountOff",
                                arguments: [disk.name]))
             if enabled {
@@ -341,11 +474,11 @@ final class AppModel: ObservableObject {
     }
 
     func setLogin(_ enabled: Bool) {
-        guard !preview else { return }
+        guard !preview, #available(macOS 13.0, *) else { return }
         do {
             if enabled { try SMAppService.mainApp.register() }
             else { try SMAppService.mainApp.unregister() }
-            loginStatus = SMAppService.mainApp.status
+            loginStatus = Self.readLoginStatus()
             if loginStatus == .requiresApproval {
                 setMessage("settings.loginHint")
             }
@@ -354,17 +487,95 @@ final class AppModel: ObservableObject {
         }
     }
 
+    private static func readLoginStatus() -> LoginStatus {
+        if #available(macOS 13.0, *) {
+            switch SMAppService.mainApp.status {
+            case .enabled: return .enabled
+            case .requiresApproval: return .requiresApproval
+            default: break
+            }
+        }
+        return .notRegistered
+    }
+
+    func openLegacyLoginItems() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preferences.users") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     func openDependencyHealth() {
         dependencySheetPresented = true
         Task { await checkDependencies() }
     }
 
-    func checkDependencies() async {
-        guard !preview, !checkingDependencies else { return }
+    var dependencyStep: DependencyInstallStep? {
+        let step = dependencyReport?.installStep(needsMainInstall: needsMainInstall)
+        #if EZNTFS_MONTEREY || EZNTFS_MONTEREY_PREVIEW
+        if #unavailable(macOS 13.0), step == .serviceSettings { return .mainInstaller }
+        #endif
+        return step
+    }
+
+    func startSetup() {
+        guard setupArchitectureMatches else {
+            dependencyNotice = "setup.wrongArchitecture"
+            return
+        }
+        observeDependencyReturn()
+        if defaults.bool(forKey: resumeFUSEKey) { awaitingDependency = .macFUSE }
+        Task { await checkDependencies() }
+    }
+
+    private func observeDependencyReturn() {
+        activationObserver = NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    guard let self, self.setup || self.dependencySheetPresented || self.awaitingDependency != nil
+                            || self.dependencyReport?.canMountReadWrite != true else { return }
+                    await self.checkDependencies()
+                }
+            }
+        installerExitObserver = NSWorkspace.shared.notificationCenter
+            .publisher(for: NSWorkspace.didTerminateApplicationNotification)
+            .compactMap { $0.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication }
+            .filter { $0.bundleIdentifier == "com.apple.installer" }
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.removeDownloadedInstaller()
+                    guard self.awaitingDependency != nil else { return }
+                    await self.checkDependencies()
+                }
+            }
+    }
+
+    func checkDependencies(startInstall: Bool = false) async {
+        guard !preview, !checkingDependencies, !preparingDependency, !setup || setupArchitectureMatches,
+              !startInstall || activity == nil else { return }
         checkingDependencies = true
-        dependencyInstallError = nil
-        dependencyReport = await Task.detached(priority: .utility) { Dependencies.inspect() }.value
+        if startInstall { dependencyNotice = nil }
+        let fromSetup = setup
+        let targetBuild = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+        let (report, requiresMain) = await Task.detached(priority: .utility) {
+            let report = Dependencies.inspect(fromSetup: fromSetup)
+            let requiresMain = fromSetup && Dependencies.needsInstallation(build: targetBuild)
+            return (report, requiresMain)
+        }.value
+        dependencyReport = report
+        needsMainInstall = requiresMain
         checkingDependencies = false
+        if startInstall || dependencyStep == nil || completedDependencyStep(report) {
+            if setup { defaults.removeObject(forKey: resumeFUSEKey) }
+            let continuing = startInstall || awaitingDependency != nil
+            awaitingDependency = nil
+            if let step = dependencyStep, continuing {
+                await openDependencyInstaller(for: step)
+            } else if dependencyStep == nil {
+                dependencyNotice = nil
+            }
+        }
+        guard !setup else { return }
         if message == Self.checkingMountMessage || message == Self.mountNotReadyMessage {
             let ready = dependencyReport?.canMountReadWrite == true
             setMessage(ready ? nil : Self.mountNotReadyMessage, error: !ready)
@@ -373,19 +584,134 @@ final class AppModel: ObservableObject {
     }
 
     func installDependency() {
-        guard !preview, activity == nil, !checkingDependencies else { return }
-        let usage = Dependencies.checkDriverUsage()
-        dependencyInstallError = usage.repairBlockMessage
-        guard usage == .idle else { return }
-        guard let installer = Bundle.main.url(forResource: "ezNTFS-Driver", withExtension: "pkg"),
-              NSWorkspace.shared.open(installer) else {
-            dependencyInstallError = "health.installerError"
-            return
+        Task { await checkDependencies(startInstall: true) }
+    }
+
+    private func completedDependencyStep(_ report: DependencyReport) -> Bool {
+        switch awaitingDependency {
+        case .macFUSE: report.macFUSE.path != nil
+        case .mainInstaller: !needsMainInstall && report.ntfs3g.path != nil && report.service == .disabled
+        case .driverRepair: report.ntfs3g.path != nil
+        case .serviceSettings: report.service.path != nil
+        case nil: false
         }
     }
 
-    func openServiceSettings() {
-        SMAppService.openSystemSettingsLoginItems()
+    private func openDependencyInstaller(for step: DependencyInstallStep) async {
+        guard activity == nil else {
+            dependencyNotice = "health.repairBusy"
+            return
+        }
+        if step == .serviceSettings, #available(macOS 13.0, *) {
+            awaitingDependency = step
+            dependencyNotice = "health.awaitingService"
+            SMAppService.openSystemSettingsLoginItems()
+            return
+        }
+        preparingDependency = true
+        defer { preparingDependency = false }
+        guard await disksAllowInstallation() else { return }
+
+        do {
+            let installer: URL
+            switch step {
+            case .macFUSE:
+                if downloadedFUSEInstaller == nil {
+                    let report: @Sendable (MacFUSEInstaller.Source) async -> Void = { [weak self] source in
+                        await self?.showFUSEDownload(source)
+                    }
+                    downloadedFUSEInstaller = try await Task.detached(priority: .userInitiated) {
+                        try await MacFUSEInstaller.prepare(reporting: report)
+                    }.value
+                }
+                guard let downloadedFUSEInstaller else { return }
+                installer = downloadedFUSEInstaller
+                guard await disksAllowInstallation() else {
+                    removeDownloadedInstaller()
+                    return
+                }
+            case .mainInstaller:
+                if setup {
+                    installer = try bundledInstaller("ezNTFS-Install")
+                    if Self.automaticallyMountsNewDisks {
+                        guard await closeInstalledAppForUpgrade(), await disksAllowInstallation() else { return }
+                    }
+                } else {
+                    guard FileManager.default.fileExists(atPath: Dependencies.cachedInstaller.path) else {
+                        dependencyNotice = "health.mainInstallerMissing"
+                        return
+                    }
+                    try SystemDriver.protectedPath(Dependencies.cachedInstaller)
+                    installer = Dependencies.cachedInstaller
+                }
+            case .driverRepair:
+                installer = try bundledInstaller("ezNTFS-Driver")
+            case .serviceSettings:
+                return
+            }
+            guard NSWorkspace.shared.open(installer) else {
+                if step == .macFUSE { removeDownloadedInstaller() }
+                dependencyNotice = "health.installerError"
+                return
+            }
+            awaitingDependency = step
+            if setup && step == .macFUSE { defaults.set(true, forKey: resumeFUSEKey) }
+            dependencyNotice = step == .macFUSE ? "health.awaitingFuse" : "health.awaitingInstaller"
+        } catch MacFUSEInstaller.PreparationError.download {
+            dependencyNotice = "health.downloadError"
+        } catch {
+            dependencyNotice = step == .macFUSE ? "health.verifyError" : "health.installerError"
+            logger.error("Dependency installer preparation failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func disksAllowInstallation() async -> Bool {
+        let usage = await Task.detached(priority: .utility) { Dependencies.installationUsage() }.value
+        dependencyNotice = activity == nil ? usage.repairBlockMessage : "health.repairBusy"
+        return dependencyNotice == nil
+    }
+
+    private func bundledInstaller(_ name: String) throws -> URL {
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &code) == errSecSuccess,
+              let code, SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSStrictValidate), nil) == errSecSuccess,
+              let url = Bundle.main.url(forResource: name, withExtension: "pkg") else {
+            throw EZError("Installer bundle verification failed.")
+        }
+        return url
+    }
+
+    private func removeDownloadedInstaller() {
+        guard let downloadedFUSEInstaller else { return }
+        try? FileManager.default.removeItem(at: downloadedFUSEInstaller.deletingLastPathComponent())
+        self.downloadedFUSEInstaller = nil
+    }
+
+    private func showFUSEDownload(_ source: MacFUSEInstaller.Source) {
+        dependencyNotice = switch source {
+        case .official: "health.downloadingFuse"
+        case .tsinghua: "health.downloadingFuseTsinghua"
+        case .nanjing: "health.downloadingFuseNanjing"
+        }
+    }
+
+    func openInstalledApp() {
+        if NSWorkspace.shared.open(Dependencies.installedApp) { NSApp.terminate(nil) }
+    }
+
+    private func closeInstalledAppForUpgrade() async -> Bool {
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: "local.ezntfs.app").filter {
+            $0.bundleURL?.standardizedFileURL.path == Dependencies.installedApp.standardizedFileURL.path && !$0.isTerminated
+        }
+        guard !running.isEmpty else { return true }
+        running.forEach { _ = $0.terminate() }
+        let deadline = DispatchTime.now() + .seconds(4)
+        while DispatchTime.now() < deadline {
+            if running.allSatisfy(\.isTerminated) { return true }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        dependencyNotice = "health.quitToInstall"
+        return false
     }
 
     func startMount() {
@@ -400,7 +726,7 @@ final class AppModel: ObservableObject {
     }
 
     private func startMount(_ target: ExternalVolume, userInitiated: Bool = false) {
-        guard !preview, activity == nil, target.canMountReadWrite else { return }
+        guard !preview, activity == nil, !preparingDependency, awaitingDependency == nil, target.canMountReadWrite else { return }
         guard let report = dependencyReport else {
             if userInitiated { setMessage(Self.checkingMountMessage) }
             return
@@ -424,11 +750,16 @@ final class AppModel: ObservableObject {
                         try MountServiceClient.mount(target)
                     }
                 }.value
+                if Self.automaticallyMountsNewDisks, target.fingerprint.canRemember,
+                   recognizedVolumes.insert(target.fingerprint).inserted {
+                    try? RememberedDisks.saveRecognizedVolumes(recognizedVolumes, to: defaults)
+                }
                 logger.notice("Read-write mount confirmed.")
                 setMessage(InterfaceMessage("notice.mounted", arguments: [target.name]))
             } catch {
                 logger.error("Read-write mount failed: \(error.localizedDescription, privacy: .public)")
                 showMountFailure(error.localizedDescription)
+                failedMountID = target.id
             }
             activityVolume = nil
             activity = nil
@@ -484,9 +815,26 @@ final class AppModel: ObservableObject {
         NSPasteboard.general.setString(path, forType: .string)
     }
 
+    func revealMountService() {
+        NSWorkspace.shared.activateFileViewerSelecting([SystemDriver.serviceBundle])
+    }
+
+    func openExtensionApproval() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?General") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    func retryFailedMount() {
+        if let failedMountID { startMount(diskID: failedMountID) }
+    }
+
     private func showMountFailure(_ detail: String) {
         let lower = detail.lowercased()
-        if lower.contains("operation not permitted") || lower.contains("permission denied") {
+        if lower.contains("system extension blocked") || lower.contains("the system extension required for mounting macfuse")
+            || lower.contains("the macfuse kernel extension is not loaded") || lower.contains("allow loading system software") {
+            setMessage("error.extensionApproval", error: true, diagnostic: detail, needsExtensionApproval: true)
+        } else if lower.contains("operation not permitted") || lower.contains("permission denied") {
             setMessage("error.permission",
                        error: true, diagnostic: detail, needsDiskPermission: true)
         } else if lower.contains("hibernated") {
@@ -581,12 +929,14 @@ final class AppModel: ObservableObject {
     }
 
     private func setMessage(_ text: InterfaceMessage?, error: Bool = false, diagnostic: String? = nil,
-                            needsDiskPermission: Bool = false) {
+                            needsDiskPermission: Bool = false, needsExtensionApproval: Bool = false) {
         displayingScanError = false
         ejectNoticeDevice = nil
         if message != text { message = text }
         if isError != error { isError = error }
         if self.diagnostic != diagnostic { self.diagnostic = diagnostic }
         if self.needsDiskPermission != needsDiskPermission { self.needsDiskPermission = needsDiskPermission }
+        if self.needsExtensionApproval != needsExtensionApproval { self.needsExtensionApproval = needsExtensionApproval }
+        if failedMountID != nil { failedMountID = nil }
     }
 }

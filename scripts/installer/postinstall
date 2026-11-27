@@ -18,6 +18,12 @@ job="/Library/LaunchDaemons/$service.plist"
 /usr/bin/install -o root -g wheel -m 644 "$driver/candidate.plist" "$receipt"
 
 if [ "$install_service" = yes ]; then
+    # Monterey has no background-item switch for system LaunchDaemons.
+    if [ "${enable_legacy_service:-no}" = yes ]; then
+        case "$(/usr/bin/sw_vers -productVersion)" in
+            12.*) /bin/launchctl enable "system/$service" ;;
+        esac
+    fi
     if /bin/launchctl print "system/$service" >/dev/null 2>&1; then
         /bin/launchctl bootout "system/$service"
     fi

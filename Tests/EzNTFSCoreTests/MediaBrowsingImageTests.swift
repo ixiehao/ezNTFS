@@ -105,13 +105,13 @@ struct MediaBrowsingImageTests {
         let encoding = ["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-threads", "2"]
         let files = FileManager.default
         try command(ffmpeg, flags + ["testsrc2=size=960x540:rate=12", "-frames:v", "360", "-q:v", "3",
-                                     folder.appendingPathComponent("photo-%03d.jpg").path], timeout: .seconds(90))
+                                     folder.appendingPathComponent("photo-%03d.jpg").path], timeout: 90)
         try files.moveItem(at: folder.appendingPathComponent("photo-001.jpg"), to: photo)
         try command(ffmpeg, flags + ["testsrc2=size=320x180:rate=12", "-t", "238"] + encoding
                     + ["-g", "24", "-sc_threshold", "0", "-f", "segment", "-segment_time", "2", "-reset_timestamps", "1",
-                       "-segment_start_number", "1", folder.appendingPathComponent("video-%03d.mp4").path], timeout: .seconds(90))
+                       "-segment_start_number", "1", folder.appendingPathComponent("video-%03d.mp4").path], timeout: 90)
         try command(ffmpeg, flags + ["testsrc2=size=1280x720:rate=30", "-t", "45"] + encoding
-                    + ["-movflags", "+faststart", movie.path], timeout: .seconds(90))
+                    + ["-movflags", "+faststart", movie.path], timeout: 90)
         let photos = (2...360).map { String(format: "photo-%03d.jpg", $0) } + [photo.lastPathComponent]
         let videos = (1...119).map { String(format: "video-%03d.mp4", $0) } + [movie.lastPathComponent]
         return (photos + videos).sorted()
@@ -122,15 +122,15 @@ struct MediaBrowsingImageTests {
         let flags = ["-hide_banner", "-loglevel", "error", "-nostdin"]
         try command(ffmpeg, flags + ["-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=24",
                                      "-frames:v", "3072", "-q:v", "3", "-threads", "4",
-                                     folder.appendingPathComponent("photo-%04d.jpg").path], timeout: .seconds(300))
+                                     folder.appendingPathComponent("photo-%04d.jpg").path], timeout: 300)
         try FileManager.default.moveItem(at: folder.appendingPathComponent("photo-0001.jpg"), to: photo)
         try command(ffmpeg, flags + ["-f", "lavfi", "-i", "testsrc2=size=3840x2160:rate=24",
                                      "-t", "8", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
                                      "-threads", "6", "-b:v", "44M", "-minrate", "44M", "-maxrate", "44M",
                                      "-bufsize", "44M", "-x264-params", "nal-hrd=cbr:force-cfr=1",
-                                     "-g", "24", "-sc_threshold", "0", seed.path], timeout: .seconds(120))
+                                     "-g", "24", "-sc_threshold", "0", seed.path], timeout: 120)
         try command(ffmpeg, flags + ["-stream_loop", "7", "-i", seed.path, "-t", "60",
-                                     "-c", "copy", "-movflags", "+faststart", movie.path], timeout: .seconds(120))
+                                     "-c", "copy", "-movflags", "+faststart", movie.path], timeout: 120)
         let photos = (2...3072).map { String(format: "photo-%04d.jpg", $0) } + [photo.lastPathComponent]
         return (photos + [movie.lastPathComponent]).sorted()
     }
@@ -139,10 +139,10 @@ struct MediaBrowsingImageTests {
                                expected: [String], timeout: Int) async throws {
         for round in 1...rounds {
             try navigate(windowID, to: outside)
-            _ = try await waitForRows(in: outside, expected: 0, since: .now, timeout: timeout)
-            let start = ContinuousClock.now
+            _ = try await waitForRows(in: outside, expected: 0, since: .now(), timeout: timeout)
+            let start = DispatchTime.now()
             async let terminal = Result { try terminalListing(media, timeout: timeout) }
-            let finder: (minimum: Int, elapsed: Duration)
+            let finder: (minimum: Int, elapsed: TimeInterval)
             do {
                 try navigate(windowID, to: media, showPreviews: phase == "video" && round == 1)
                 finder = try await waitForRows(in: media, expected: expected.count, since: start, timeout: timeout)
@@ -153,7 +153,7 @@ struct MediaBrowsingImageTests {
             }
             let (names, terminalTime) = try await terminal.get()
             #expect(names == expected, "\(phase) \(round): terminal list differs from the fixture manifest.")
-            try await Task.sleep(for: .milliseconds(350))
+            try await Task.sleep(nanoseconds: 350_000_000)
             let settled = finderRows(in: media)
             #expect(settled == expected.count, "\(phase) \(round): Finder list became incomplete after loading.")
             let status = finderStatus(in: media)
@@ -161,10 +161,10 @@ struct MediaBrowsingImageTests {
         }
     }
 
-    private static func terminalListing(_ folder: URL, timeout: Int) throws -> ([String], Duration) {
-        let start = ContinuousClock.now
-        let output = try command("/bin/ls", ["-1", folder.path], timeout: .seconds(timeout))
-        return (output.split(separator: "\n").map(String.init).sorted(), start.duration(to: .now))
+    private static func terminalListing(_ folder: URL, timeout: Int) throws -> ([String], TimeInterval) {
+        let start = DispatchTime.now()
+        let output = try command("/bin/ls", ["-1", folder.path], timeout: TimeInterval(timeout))
+        return (output.split(separator: "\n").map(String.init).sorted(), elapsed(since: start))
     }
 
     private static func navigate(_ windowID: String, to folder: URL, showPreviews: Bool = false) throws {
@@ -179,20 +179,24 @@ struct MediaBrowsingImageTests {
             """, [windowID, folder.path, String(showPreviews)])
     }
 
-    private static func waitForRows(in folder: URL, expected: Int, since start: ContinuousClock.Instant, timeout: Int) async throws
-        -> (minimum: Int, elapsed: Duration) {
+    private static func waitForRows(in folder: URL, expected: Int, since start: DispatchTime, timeout: Int) async throws
+        -> (minimum: Int, elapsed: TimeInterval) {
         var minimum: Int?
         var latest: Int?
-        while start.duration(to: .now) < .seconds(timeout) {
+        while DispatchTime.now() < start + .seconds(timeout) {
             if let count = finderRows(in: folder) {
                 minimum = min(minimum ?? count, count)
                 latest = count
-                if count == expected { return (minimum ?? count, start.duration(to: .now)) }
+                if count == expected { return (minimum ?? count, elapsed(since: start)) }
             }
-            try await Task.sleep(for: .milliseconds(50))
+            try await Task.sleep(nanoseconds: 50_000_000)
         }
         let detail = finderStatus(in: folder) ?? "unavailable"
         throw EZError("Finder did not show \(expected) rows in \(timeout) s (last count: \(latest.map(String.init) ?? "unavailable"); status: \(detail)).")
+    }
+
+    private static func elapsed(since start: DispatchTime) -> TimeInterval {
+        TimeInterval(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1e9
     }
 
     private static func finderRows(in folder: URL) -> Int? {
@@ -259,7 +263,7 @@ struct MediaBrowsingImageTests {
                 play testMovie
             end tell
             """, [movie.path])
-        try await Task.sleep(for: .milliseconds(600))
+        try await Task.sleep(nanoseconds: 600_000_000)
         func playbackTime() throws -> Double {
             let output = try appleScript("""
                 tell application "QuickTime Player"
@@ -293,8 +297,10 @@ struct MediaBrowsingImageTests {
             }
         }
         try command("/usr/bin/open", ["-g", "-b", appID, photo.path])
-        let deadline = ContinuousClock.now + .seconds(8)
-        while photoWindow() == nil && ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(100)) }
+        let deadline = DispatchTime.now() + .seconds(8)
+        while photoWindow() == nil && DispatchTime.now() < deadline {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
         try #require(photoWindow() != nil, "Preview did not open the test photo.")
         try await check()
         #expect(photoWindow() != nil, "Preview closed the test photo during browsing.")
@@ -308,7 +314,7 @@ struct MediaBrowsingImageTests {
     }
 
     @discardableResult
-    private static func command(_ path: String, _ arguments: [String], timeout: Duration = .seconds(8)) throws -> String {
+    private static func command(_ path: String, _ arguments: [String], timeout: TimeInterval = 8) throws -> String {
         String(decoding: try Tool.run(path, arguments, queryTimeout: timeout), as: UTF8.self)
     }
 }

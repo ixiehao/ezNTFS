@@ -3,6 +3,12 @@ set -eu
 
 . "$(dirname "$0")/settings"
 [ "$3" = "/" ] || { echo "请选择当前启动盘。" >&2; exit 1; }
+if /usr/bin/arch -arm64 /usr/bin/true >/dev/null 2>&1; then
+    host_architecture=arm64
+else
+    host_architecture=x86_64
+fi
+[ "$architecture" = "$host_architecture" ] || { echo "Use the ezNTFS installer for $host_architecture." >&2; exit 1; }
 fuse=/Library/Filesystems/macfuse.fs
 service_signer='anchor apple generic and certificate leaf[subject.OU] = "3T5GSNBU6W"'
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$fuse/Contents/Info.plist") || exit 1
@@ -36,7 +42,7 @@ my @st = stat $lock;
 die "Unsafe ezNTFS installation lock" if !@st || !S_ISREG($st[2]) || $st[4] != 0 || $st[2] & 0022;
 flock($lock, LOCK_EX | LOCK_NB) or die "ezNTFS 正在挂载。请先安全弹出所有移动硬盘，然后重新运行安装包。\n";
 if (-e "$root/Driver/installed.plist" || -e "$root/service.plist") {
-    # This package only replaces ezNTFS files. Other macFUSE drivers may keep their mounts.
+    # Check again under the install lock, including external disks with non-NTFS volumes.
     my $usage = system($usageChecker, "$root/Driver");
     die "移动硬盘正在使用。请先安全弹出所有移动硬盘，然后重新运行安装包。\n" if $usage == (1 << 8);
     die "无法确认 ezNTFS 驱动是否正在使用，请稍后重试。\n" if $usage != 0;

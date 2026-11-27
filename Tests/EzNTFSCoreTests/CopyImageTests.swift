@@ -1,10 +1,42 @@
 import Darwin
-import EzNTFSCore
+@testable import EzNTFSCore
 import Foundation
 import Testing
 
 @Suite(.serialized)
 struct CopyImageTests {
+    #if EZNTFS_MONTEREY_PREVIEW
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["EZNTFS_TEST_IMAGE"] != nil))
+    func verifiesTheSameTestFileAfterRemounting() throws {
+        let input = try #require(ProcessInfo.processInfo.environment["EZNTFS_TEST_IMAGE"])
+        let base = URL(fileURLWithPath: try canonicalPath(FileManager.default.temporaryDirectory.path), isDirectory: true)
+        let directory = base.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let image = directory.appendingPathComponent("test.img")
+        let mount = directory.appendingPathComponent("mount", isDirectory: true)
+        try FileManager.default.createDirectory(at: mount, withIntermediateDirectories: true,
+                                                attributes: [.posixPermissions: 0o700])
+        let backing = try MountedDisk.at(mount.path)
+        defer {
+            do {
+                try unmountTestImage(image, at: mount, backing: backing)
+                try FileManager.default.removeItem(at: directory)
+            } catch {
+                Issue.record("Temporary image cleanup failed: \(error.localizedDescription)")
+            }
+        }
+        _ = try Tool.run("/bin/cp", ["-c", input, image.path])
+        try Mounting.mountImage(source: image.path, destination: mount, label: "EZNTFS-QA")
+        let batch = try PreviewTestImage.writeSample(to: MountedDisk.at(mount.path))
+        try unmountTestImage(image, at: mount, backing: backing)
+        try Mounting.mountImage(source: image.path, destination: mount, label: "EZNTFS-QA")
+        let remounted = try MountedDisk.at(mount.path)
+        try PreviewTestImage.verifySample(in: batch, on: remounted)
+        #expect(throws: (any Error).self) {
+            try PreviewTestImage.verifySample(in: "../\(batch)", on: remounted)
+        }
+    }
+    #endif
+
     @Test(.enabled(if: ProcessInfo.processInfo.environment["EZNTFS_TEST_IMAGE"] != nil))
     func copyRemountAndMutationRegression() async throws {
         let fixture = try #require(ProcessInfo.processInfo.environment["EZNTFS_TEST_IMAGE"])
@@ -277,7 +309,7 @@ func unmountTestImage(_ image: URL, at mount: URL, backing: MountedDisk) throws 
         guard observed.path == mount.path, observed.source == image.path, observed.kind == "macfuse" else {
             throw EZError("Unexpected mount identity during test image cleanup.")
         }
-        do { _ = try Tool.run("/sbin/umount", [mount.path], queryTimeout: .seconds(2)) }
+        do { _ = try Tool.run("/sbin/umount", [mount.path], queryTimeout: 2) }
         catch {
             if try MountedDisk.at(mount.path) == backing { return }
             guard attempt < 10 else { throw error }
