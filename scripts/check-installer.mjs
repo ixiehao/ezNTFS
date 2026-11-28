@@ -98,11 +98,13 @@ for (const lang of ["en", "zh-Hans", "ja"]) {
     }
   });
 
-  test(lang + " check still blocks upgrades when an external disk is in use", () => {
+  test(lang + " blocks upgrades until external disks have been safely ejected", () => {
     for (const installed of [receipt, service]) {
-      const outcome = preflight({ files: [path, ...components, installed], version: "5.5.0", busy: true });
+      const existingInstall = { files: [path, ...components, installed], version: "5.5.0" };
+      const outcome = preflight({ ...existingInstall, busy: true });
       assert.equal(outcome.allowed, false);
       assert.equal(outcome.title, catalog["externalDisks.title"]);
+      assert.deepEqual(preflight(existingInstall), { allowed: true });
     }
   });
 }

@@ -6,7 +6,7 @@ ezNTFS は、Mac で Windows の外付け NTFS ドライブを読み書きする
 
 よく使うドライブは個別に自動マウントできます。大事なファイルには、コピー先を読み戻して SHA-256 を照合する「コピーして検証」が使えます。NTFS の読み書きには NTFS-3G と macFUSE を使っています。
 
-[Apple シリコン版 0.5.3 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-arm64-Setup.zip) · [Intel 版 0.5.3 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-x86_64-Monterey-Setup.zip) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.3) · [ezNTFS 公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
+[Apple シリコン版 0.5.4 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.4/ezNTFS-0.5.4-arm64-Setup.zip) · [Intel 版 0.5.4 をダウンロード](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.4/ezNTFS-0.5.4-x86_64-Monterey-Setup.zip) · [リリースノートとチェックサム](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.4) · [ezNTFS 公式サイト](https://ixiehao.github.io/ezNTFS/ja/)
 
 <img src="website/assets/ezntfs-ja.png" width="660" alt="3 台のデモ用 NTFS ドライブとマウント状態を表示する ezNTFS">
 
@@ -14,7 +14,7 @@ ezNTFS は、Mac で Windows の外付け NTFS ドライブを読み書きする
 
 Apple シリコン版は macOS 14 以降、Intel 版は macOS 12.7 以降に対応しています。 [Intel Mac インストールガイド（中国語）](docs/INSTALL-INTEL.zh-CN.md)
 
-ダウンロードしたファイルを解凍して `Install ezNTFS.app` を開き、「依存コンポーネントをインストールまたは修復」を選びます。対応する macFUSE があればそのまま使い、必要な場合は公式パッケージをダウンロードして検証します。認証や機能拡張の許可、再起動は macOS の指示に従ってください。
+ダウンロードしたファイルを解凍して `Install ezNTFS.app` を開き、画面の案内に従ってインストールまたはアップグレードします。対応する macFUSE があればそのまま使い、必要な場合は公式パッケージをダウンロードして検証します。認証や機能拡張の許可、再起動は macOS の指示に従ってください。
 
 単体の PKG を使う場合：
 
@@ -37,7 +37,7 @@ Apple シリコン版は macOS 14 以降、Intel 版は macOS 12.7 以降に対�
 
 ## ヘルプ
 
-- macOS にディスクへのアクセスを拒否された場合は、「ヘルプ → 依存ツールを確認…」を開きます。パネルの案内に従い、マウントサービスを「フルディスクアクセス」に追加してください。[プライバシーとアクセス権](docs/PRIVACY.md)
+- macOS にディスクへのアクセスを拒否された場合は、「ヘルプ → 依存ツールを確認…」を開きます。権限の案内から設定を開き、Service.app を「フルディスクアクセス」に追加してオンにします。一覧にない場合は「Finder で表示」で場所を確認できます。許可したら「マウントを再試行」を選びます。[プライバシーとアクセス権](docs/PRIVACY.md)
 - 「ヘルプ → アップデートを確認」で最新の安定版を確認できます。表示言語は「言語」メニューから変更できます。[問題を報告](https://github.com/ixiehao/ezNTFS/issues)
 
 ## 開発

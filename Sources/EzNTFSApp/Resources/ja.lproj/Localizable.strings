@@ -46,7 +46,7 @@
 "disk.writable" = "読み書き可";
 "error.autoMountOff" = "先に設定で「接続時に自動マウント」をオンにしてください。";
 "error.busy" = "ディスクは使用中です。このディスクを使用中のウインドウやファイルを閉じてから、やり直してください。";
-"error.copyServicePath" = "サービスのパスをコピー";
+"error.copyServicePath" = "Service.app のパスをコピー";
 "error.diskEvents" = "macOS のディスクイベントを監視できません。手動で状態を更新してください。";
 "error.duplicateIdentity" = "複数のディスクが同じ識別子を使用しています。手動でマウントしてください。";
 "error.eject" = "「%@」を取り出せませんでした。このディスクを使用中のウインドウやアプリを閉じてから、やり直してください。";
@@ -55,9 +55,10 @@
 "error.mount" = "読み書きでマウントできませんでした。ドライバの応答は「技術的な詳細」をご覧ください。";
 "error.nigate" = "ezNTFS でマウントする前に Nigate を終了してください。";
 "error.noIdentity" = "このディスクには安定した識別子がありません。手動でマウントできます。";
-"error.openPermissions" = "プライバシー設定を開く";
-"error.permission" = "「フルディスクアクセス」に ezNTFS のマウントサービス（Service.app）を追加してオンにし、やり直してください。";
-"error.permissionTitle" = "読み書きでのマウントには許可が必要です";
+"error.openPermissions" = "アクセス設定を開く";
+"error.permission" = "「フルディスクアクセス」で Service.app をオンにします。一覧にない場合は「Finder で表示」で場所を確認し、設定の「＋」から追加してください。";
+"error.permissionTitle" = "NTFS への書き込みにはフルディスクアクセスが必要です";
+"error.permissionRetryHint" = "Service.app がオンの場合は「マウントを再試行」を選んでください。";
 "error.refresh" = "ディスクの状態を更新できませんでした。しばらくしてからやり直してください。";
 "error.saveAutoMount" = "このディスクの自動マウント設定を保存できませんでした。";
 "error.technical" = "技術的な詳細";
@@ -71,8 +72,10 @@
 "health.missing" = "未インストール";
 "health.mountNotReady" = "NTFS コンポーネントの準備ができていません。「動作環境の確認」を開いてください。";
 "health.refresh" = "再確認";
-"health.repairBusy" = "外付けディスク上のファイルを閉じ、すべての外付けディスクを安全に取り出してから、もう一度実行してください。";
+"health.repairBusy" = "外付けディスクが使用中です。ディスク上のファイルを閉じ、Finder または ezNTFS で安全に取り出してから、「再試行」をクリックしてください。";
 "health.repairUnknown" = "外付けディスクの使用状況を確認できませんでした。すべての外付けディスクを安全に取り出してから、再試行してください。";
+"health.retry" = "再試行";
+"health.waitingForEject" = "外付けディスクの取り出しを待機中";
 "health.service" = "マウントサービス";
 "health.title" = "動作環境の確認";
 "health.unavailable" = "利用できません";
@@ -91,6 +94,11 @@
 "health.releasePage" = "ezNTFS のリリースページを開く";
 "setup.title" = "ezNTFS をインストール";
 "setup.openApp" = "ezNTFS を開く";
+"setup.continueInstall" = "インストールを続ける";
+"setup.upgrade" = "ezNTFS をアップグレード";
+"setup.upgradeTitle" = "ezNTFS をアップグレードできます";
+"setup.upgradeHint" = "準備ができました。すべての外付けディスクを安全に取り出してから、ezNTFS とマウントサービスをアップグレードしてください。";
+"setup.openCurrent" = "インストール済みの ezNTFS を開く";
 "setup.serviceInstalled" = "インストール済み";
 "setup.wrongArchitecture" = "これは Intel Mac 用です。Apple シリコン搭載 Mac 用をダウンロードしてください。";
 "menu.about" = "ezNTFS について";
@@ -144,8 +152,8 @@
 "testImage.readPassed" = "テストファイルを再度読み込み、内容の一致を確認しました。";
 "testImage.verifyFailed" = "テストファイルを検証できませんでした。詳細を確認してください。";
 "settings.autoMountConnectedHint" = "接続した外付け NTFS ディスクを自動で読み書き可能にします。ディスクごとに無効にできます。";
-"error.revealService" = "Finder でマウントサービスを表示";
+"error.revealService" = "Finder で表示";
 "error.extensionApproval" = "macFUSE が読み込まれていません。「セキュリティとプライバシー」で機能拡張を許可し、必要に応じて再起動してから再試行してください。";
 "health.securitySettings" = "セキュリティとプライバシーを開く";
 "error.retryMount" = "マウントを再試行";
-"health.quitToInstall" = "動作中の ezNTFS を終了し、もう一度インストールまたは修復してください。";
+"health.quitToInstall" = "動作中の ezNTFS を終了してから、このウインドウに戻って続けてください。";

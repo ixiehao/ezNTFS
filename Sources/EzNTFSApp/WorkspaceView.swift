@@ -282,43 +282,22 @@ struct WorkspaceView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("console-message")
                 if model.needsDiskPermission {
-                    HStack(spacing: 8) {
-                        Button(language.text("error.openPermissions"), action: model.openDiskPermission)
+                    permissionActions
+                } else {
+                    if model.needsExtensionApproval {
+                        Button(language.text("health.securitySettings"), action: model.openExtensionApproval)
                             .buttonStyle(.borderedProminent)
-                        if AppModel.automaticallyMountsNewDisks {
-                            Button(language.text("error.revealService"), action: model.revealMountService)
+                    }
+                    HStack(spacing: 8) {
+                        if canRetryMount {
+                            Button(language.text("error.retryMount"), action: model.retryFailedMount)
                                 .buttonStyle(.bordered)
-                        } else {
-                            Button(language.text("error.copyServicePath"), action: model.copyMountHelperPath)
-                                .buttonStyle(.bordered)
+                                .disabled(model.activity != nil)
                         }
+                        if let diagnostic = model.diagnostic { technicalDetails(diagnostic) }
                     }
-                } else if model.needsExtensionApproval {
-                    Button(language.text("health.securitySettings"), action: model.openExtensionApproval)
-                        .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
                 }
-                HStack(spacing: 8) {
-                    if let failedMountID = model.failedMountID, model.disks.contains(where: { $0.id == failedMountID }) {
-                        Button(language.text("error.retryMount"), action: model.retryFailedMount)
-                            .buttonStyle(.bordered)
-                            .disabled(model.activity != nil)
-                    }
-                    if let diagnostic = model.diagnostic {
-                        Button(language.text("error.technical")) { errorDetailsPresented.toggle() }
-                            .buttonStyle(.borderless)
-                            .popover(isPresented: $errorDetailsPresented) {
-                                ScrollView {
-                                    Text(diagnostic)
-                                        .font(.caption.monospaced())
-                                        .textSelection(.enabled)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .frame(width: 355, height: 115)
-                                .padding(12)
-                            }
-                    }
-                }
-                .controlSize(.small)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -330,6 +309,57 @@ struct WorkspaceView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("error-banner")
+    }
+
+    private var canRetryMount: Bool {
+        model.failedMountID.map { id in model.disks.contains { $0.id == id } } ?? false
+    }
+
+    private var permissionActions: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if canRetryMount {
+                Text(language.text("error.permissionRetryHint"))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                action(language.text("error.openPermissions"), icon: .settings, prominent: true,
+                       identifier: "permission-open-settings", method: model.openDiskPermission)
+                action(language.text("error.revealService"), icon: .folder,
+                       identifier: "permission-show-service", method: model.revealMountService)
+                if canRetryMount {
+                    action(language.text("error.retryMount"), icon: .refresh,
+                           identifier: "permission-retry-mount", method: model.retryFailedMount)
+                        .disabled(model.activity != nil)
+                }
+            }
+            if let diagnostic = model.diagnostic {
+                technicalDetails(diagnostic)
+                    .controlSize(.small)
+            }
+        }
+        .padding(.top, 3)
+    }
+
+    private func technicalDetails(_ diagnostic: String) -> some View {
+        Button(language.text("error.technical")) { errorDetailsPresented.toggle() }
+            .buttonStyle(.borderless)
+            .popover(isPresented: $errorDetailsPresented) {
+                VStack(alignment: .leading, spacing: 10) {
+                    ScrollView {
+                        Text(diagnostic)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(width: 355, height: 115)
+                    if model.needsDiskPermission {
+                        Button(language.text("error.copyServicePath"), action: model.copyMountHelperPath)
+                    }
+                }
+                .padding(12)
+            }
     }
 
     private func notice(_ message: String) -> some View {

@@ -46,7 +46,7 @@
 "disk.writable" = "Read-Write";
 "error.autoMountOff" = "Turn on Mount on Connection in Settings first.";
 "error.busy" = "The disk is in use. Close windows or files using it, then try again.";
-"error.copyServicePath" = "Copy Service Path";
+"error.copyServicePath" = "Copy Service.app Path";
 "error.diskEvents" = "Could not monitor macOS disk events. Refresh the disk status manually.";
 "error.duplicateIdentity" = "Multiple disks share this identifier. Mount this disk manually.";
 "error.eject" = "Could not eject “%@”. Close any windows or apps using it, then try again.";
@@ -55,9 +55,10 @@
 "error.mount" = "Could not mount the disk as read-write. See Technical Details for the driver response.";
 "error.nigate" = "Quit Nigate before mounting with ezNTFS.";
 "error.noIdentity" = "This disk has no stable identifier. You can mount it manually.";
-"error.openPermissions" = "Open Privacy Settings";
-"error.permission" = "In Full Disk Access, add and enable the ezNTFS mount service (Service.app), then try again.";
-"error.permissionTitle" = "Read-write mounting needs permission";
+"error.openPermissions" = "Open Full Disk Access";
+"error.permission" = "Turn on Service.app in Full Disk Access. If it is missing, click Show in Finder to locate Service.app, then add it with the + button in Settings.";
+"error.permissionTitle" = "Writing to NTFS requires Full Disk Access";
+"error.permissionRetryHint" = "Service.app already enabled? Click Retry Mount.";
 "error.refresh" = "Could not refresh disk status. Try again in a moment.";
 "error.saveAutoMount" = "Could not save the auto-mount setting for this disk.";
 "error.technical" = "Technical Details";
@@ -71,8 +72,10 @@
 "health.missing" = "Not installed";
 "health.mountNotReady" = "The NTFS components aren’t ready. Open Environment Check for details.";
 "health.refresh" = "Check Again";
-"health.repairBusy" = "Close files on external disks, safely eject all external disks, then click Install or Repair Dependencies again.";
+"health.repairBusy" = "External disks are in use. Close any files on them, safely eject the disks in Finder or ezNTFS, then click Retry.";
 "health.repairUnknown" = "External disk usage could not be confirmed. Safely eject all external disks and try again.";
+"health.retry" = "Retry";
+"health.waitingForEject" = "Waiting for external disks to be ejected";
 "health.service" = "Mount Service";
 "health.title" = "Environment Check";
 "health.unavailable" = "Unavailable";
@@ -91,6 +94,11 @@
 "health.releasePage" = "Open ezNTFS Releases";
 "setup.title" = "Install ezNTFS";
 "setup.openApp" = "Open ezNTFS";
+"setup.continueInstall" = "Continue Installation";
+"setup.upgrade" = "Upgrade ezNTFS";
+"setup.upgradeTitle" = "Ready to upgrade ezNTFS";
+"setup.upgradeHint" = "The dependencies are ready. Safely eject all external disks before upgrading ezNTFS and its mount service.";
+"setup.openCurrent" = "Open Installed ezNTFS";
 "setup.serviceInstalled" = "Installed";
 "setup.wrongArchitecture" = "This installer is for Intel Macs. Download the Apple silicon version.";
 "menu.about" = "About ezNTFS";
@@ -144,8 +152,8 @@
 "testImage.readPassed" = "The test file was read again and its contents match.";
 "testImage.verifyFailed" = "The test file could not be verified. See the details.";
 "settings.autoMountConnectedHint" = "Automatically mount eligible external NTFS disks read-write on connection. You can turn it off for individual disks.";
-"error.revealService" = "Show Mount Service in Finder";
+"error.revealService" = "Show in Finder";
 "error.extensionApproval" = "macOS has not loaded macFUSE. Allow its extension in Security & Privacy, restart if prompted, and retry.";
 "health.securitySettings" = "Open Security & Privacy";
 "error.retryMount" = "Retry Mount";
-"health.quitToInstall" = "Quit the running copy of ezNTFS, then choose Install or Repair Dependencies again.";
+"health.quitToInstall" = "Quit the running copy of ezNTFS, then return here to continue.";

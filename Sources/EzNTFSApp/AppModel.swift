@@ -247,6 +247,7 @@ final class AppModel: ObservableObject {
         }
         if preview == .permissionDenied {
             showMountFailure("Error opening '/dev/disk4s1': Operation not permitted")
+            failedMountID = selection
         }
         if preview == .copying {
             activity = .copying
@@ -633,9 +634,7 @@ final class AppModel: ObservableObject {
             case .mainInstaller:
                 if setup {
                     installer = try bundledInstaller("ezNTFS-Install")
-                    if Self.automaticallyMountsNewDisks {
-                        guard await closeInstalledAppForUpgrade(), await disksAllowInstallation() else { return }
-                    }
+                    guard await closeInstalledAppForUpgrade(), await disksAllowInstallation() else { return }
                 } else {
                     guard FileManager.default.fileExists(atPath: Dependencies.cachedInstaller.path) else {
                         dependencyNotice = "health.mainInstallerMissing"
@@ -695,8 +694,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func openInstalledApp() {
-        if NSWorkspace.shared.open(Dependencies.installedApp) { NSApp.terminate(nil) }
+    var hasInstalledApp: Bool {
+        setup && Bundle(url: Dependencies.installedApp) != nil
+    }
+
+    func openInstalledApp(closeSetup: Bool = true) {
+        if NSWorkspace.shared.open(Dependencies.installedApp), closeSetup { NSApp.terminate(nil) }
     }
 
     private func closeInstalledAppForUpgrade() async -> Bool {

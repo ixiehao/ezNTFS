@@ -6,7 +6,7 @@ Read and write Windows NTFS drives on your Mac. ezNTFS is a free, open-source NT
 
 Turn on auto-mount for the drives you use regularly. For important files, **Copy & Verify** reads each copy back and checks its SHA-256 before handing over the batch. ezNTFS uses NTFS-3G and macFUSE.
 
-[Download 0.5.3 for Apple silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-arm64-Setup.zip) · [Download 0.5.3 for Intel](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-x86_64-Monterey-Setup.zip) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.3) · [ezNTFS official website](https://ixiehao.github.io/ezNTFS/)
+[Download 0.5.4 for Apple silicon](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.4/ezNTFS-0.5.4-arm64-Setup.zip) · [Download 0.5.4 for Intel](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.4/ezNTFS-0.5.4-x86_64-Monterey-Setup.zip) · [Release notes and checksums](https://github.com/ixiehao/ezNTFS/releases/tag/v0.5.4) · [ezNTFS official website](https://ixiehao.github.io/ezNTFS/)
 
 <img src="website/assets/ezntfs-en.png" width="660" alt="ezNTFS showing three example NTFS drives and their mount status">
 
@@ -14,7 +14,7 @@ Turn on auto-mount for the drives you use regularly. For important files, **Copy
 
 The stable release supports Apple silicon Macs on macOS 14 or later and Intel Macs on macOS 12.7 or later. [Intel installation guide (Chinese)](docs/INSTALL-INTEL.zh-CN.md)
 
-Unzip the download, open **Install ezNTFS**, and choose **Install or Repair Dependencies**. It skips a compatible macFUSE installation and downloads and verifies the official package if needed. Follow the macOS prompts for administrator approval, extensions and restarting.
+Unzip the download, open **Install ezNTFS**, and follow the installation or upgrade prompts. It skips a compatible macFUSE installation and downloads and verifies the official package if needed. Follow the macOS prompts for administrator approval, extensions and restarting.
 
 For a standalone PKG:
 
@@ -37,7 +37,7 @@ Closing the window leaves ezNTFS in the menu bar. Choose **Open ezNTFS** to brin
 
 ## Help
 
-- If macOS blocks disk access, open **Help → Check Dependencies**. Use **Open Privacy Settings** and **Copy Service Path** to add the mount service to Full Disk Access. [Privacy and permissions](docs/PRIVACY.md)
+- If macOS blocks disk access, open **Help → Check Dependencies**. Use **Open Full Disk Access** and **Show in Finder** to add or enable the mount service. Then click **Retry Mount**. [Privacy and permissions](docs/PRIVACY.md)
 - Use **Help → Check for Updates** for the latest stable release. Choose your preferred language from the **Language** menu. [Report an issue](https://github.com/ixiehao/ezNTFS/issues)
 
 ## Development

@@ -46,7 +46,7 @@
 "disk.writable" = "可读写";
 "error.autoMountOff" = "请先在设置中开启「插盘后自动挂载」。";
 "error.busy" = "硬盘仍被系统或其他应用占用。请关闭正在使用它的窗口或文件，再重试。";
-"error.copyServicePath" = "复制组件路径";
+"error.copyServicePath" = "复制 Service.app 路径";
 "error.diskEvents" = "无法订阅 macOS 的磁盘事件。可以手动刷新状态。";
 "error.duplicateIdentity" = "有多块硬盘使用相同的设备标识，可手动挂载。";
 "error.eject" = "未能弹出「%@」。请关闭正在使用这块硬盘的窗口或应用，再重试。";
@@ -56,8 +56,9 @@
 "error.nigate" = "Nigate 正在运行。退出后再用 ezNTFS 挂载。";
 "error.noIdentity" = "这块硬盘缺少稳定标识，可手动挂载。";
 "error.openPermissions" = "打开权限设置";
-"error.permission" = "请在「完全磁盘访问权限」中添加并启用 ezNTFS 挂载服务（Service.app），再重试。";
-"error.permissionTitle" = "读写挂载需要授权";
+"error.permission" = "在「完全磁盘访问权限」中开启 Service.app。列表里没有时，先点「在访达中显示」定位文件，再在权限设置中点「＋」添加。";
+"error.permissionTitle" = "写入 NTFS 需要完全磁盘访问权限";
+"error.permissionRetryHint" = "Service.app 已开启？直接点「重试挂载」。";
 "error.refresh" = "无法刷新硬盘状态。请稍后重试。";
 "error.saveAutoMount" = "无法保存这块硬盘的自动挂载设置。";
 "error.technical" = "技术详情";
@@ -71,8 +72,10 @@
 "health.missing" = "未安装";
 "health.mountNotReady" = "读写组件尚未就绪。请在「环境检查」中查看。";
 "health.refresh" = "重新检查";
-"health.repairBusy" = "请关闭移动硬盘上的文件，安全弹出所有移动硬盘，再点「安装或修复依赖」。";
+"health.repairBusy" = "有移动硬盘正在使用。请关闭盘上的文件，在访达或 ezNTFS 中安全弹出所有移动硬盘，然后点「重试」。";
 "health.repairUnknown" = "暂时无法确认移动硬盘的使用状态。请安全弹出所有移动硬盘后重试。";
+"health.retry" = "重试";
+"health.waitingForEject" = "等待安全弹出移动硬盘";
 "health.service" = "挂载服务";
 "health.title" = "环境检查";
 "health.unavailable" = "不可用";
@@ -91,6 +94,11 @@
 "health.releasePage" = "打开 ezNTFS 发布页";
 "setup.title" = "安装 ezNTFS";
 "setup.openApp" = "打开 ezNTFS";
+"setup.continueInstall" = "继续安装";
+"setup.upgrade" = "升级 ezNTFS";
+"setup.upgradeTitle" = "可以升级 ezNTFS";
+"setup.upgradeHint" = "依赖已就绪。请先安全弹出所有移动硬盘，再升级 ezNTFS 和挂载服务。";
+"setup.openCurrent" = "打开当前版本";
 "setup.serviceInstalled" = "已安装";
 "setup.wrongArchitecture" = "这是 Intel Mac 安装包。请下载适用于 Apple 芯片 Mac 的版本。";
 "menu.about" = "关于 ezNTFS";
@@ -144,8 +152,8 @@
 "testImage.readPassed" = "重新读取成功，测试文件内容一致。";
 "testImage.verifyFailed" = "测试文件验证失败。请查看详情。";
 "settings.autoMountConnectedHint" = "插入可安全挂载的 NTFS 外接盘时自动开启读写。可对单个硬盘关闭。";
-"error.revealService" = "在访达显示挂载服务";
+"error.revealService" = "在访达中显示";
 "error.extensionApproval" = "macOS 尚未允许加载 macFUSE。请在「安全性与隐私」按系统提示允许，并在需要时重启，再重试挂载。";
 "health.securitySettings" = "打开安全性与隐私";
 "error.retryMount" = "重试挂载";
-"health.quitToInstall" = "请退出正在运行的 ezNTFS，然后重新点「安装或修复依赖」。";
+"health.quitToInstall" = "请退出正在运行的 ezNTFS，再回到此窗口继续。";

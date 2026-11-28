@@ -9,6 +9,22 @@ struct DependencyHealthView: View {
 
     private var language: AppLanguage { model.language }
 
+    private var blockedByDisk: Bool {
+        model.dependencyNotice == "health.repairBusy" || model.dependencyNotice == "health.repairUnknown"
+    }
+
+    private var needsUpgrade: Bool {
+        model.hasInstalledApp && model.needsMainInstall && model.dependencyReport?.canMountReadWrite == true
+    }
+
+    private var installTitle: String {
+        if blockedByDisk { return language.text("health.retry") }
+        if model.setup && model.dependencyStep == .mainInstaller {
+            return language.text(model.hasInstalledApp ? "setup.upgrade" : "setup.continueInstall")
+        }
+        return language.text("health.install")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -20,6 +36,13 @@ struct DependencyHealthView: View {
                     Label { Text(language.text("health.refresh")) } icon: { TablerIcon.refresh.view(size: 15) }
                 }
                 .disabled(model.checkingDependencies || model.preparingDependency || (model.setup && !model.setupArchitectureMatches))
+            }
+
+            if blockedByDisk, let notice = model.dependencyNotice {
+                installationNotice(title: "health.waitingForEject", detail: language.resolve(notice), blocked: true)
+                    .accessibilityIdentifier("setup-install-blocked")
+            } else if needsUpgrade && model.dependencyNotice == nil {
+                installationNotice(title: "setup.upgradeTitle", detail: language.text("setup.upgradeHint"))
             }
 
             if model.checkingDependencies {
@@ -44,9 +67,11 @@ struct DependencyHealthView: View {
                     .font(.callout)
                 }
             }
-            if let notice = model.dependencyNotice {
+            if let notice = model.dependencyNotice, !blockedByDisk {
                 HStack(alignment: .top, spacing: 8) {
-                    if model.preparingDependency { ProgressView().controlSize(.small) }
+                    if model.preparingDependency {
+                        ProgressView().controlSize(.small)
+                    }
                     Text(language.resolve(notice))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -59,25 +84,27 @@ struct DependencyHealthView: View {
                 } else if #unavailable(macOS 13.0), notice.key == "health.awaitingFuse" {
                     Button(language.text("health.securitySettings"), action: model.openExtensionApproval)
                 }
-            } else if model.dependencyStep == .macFUSE && !model.checkingDependencies {
+            } else if !blockedByDisk && model.dependencyStep == .macFUSE && !model.checkingDependencies {
                 Text(language.text("health.fuseHint", MacFUSEInstaller.version))
                     .font(.callout).foregroundStyle(.secondary)
             }
             HStack {
                 if !model.setup {
                     Button(language.text("health.diskPermissions"), action: model.openDiskPermission)
+                } else if blockedByDisk && model.hasInstalledApp {
+                    Button(language.text("setup.openCurrent")) { model.openInstalledApp(closeSetup: false) }
                 }
                 Spacer()
                 if !model.setup {
                     Button(language.text("button.done")) { dismiss() }
                 }
                 if model.dependencyStep != nil {
-                    Button(language.text("health.install"), action: model.installDependency)
+                    Button(installTitle, action: model.installDependency)
                         .buttonStyle(.borderedProminent)
                         .disabled(model.checkingDependencies || model.preparingDependency || model.activity != nil)
                         .keyboardShortcut(.defaultAction)
                 } else if model.setup && model.dependencyReport != nil {
-                    Button(language.text("setup.openApp"), action: model.openInstalledApp)
+                    Button(language.text("setup.openApp")) { model.openInstalledApp() }
                         .buttonStyle(.borderedProminent)
                         .keyboardShortcut(.defaultAction)
                 }
@@ -85,6 +112,24 @@ struct DependencyHealthView: View {
         }
         .padding(22)
         .frame(width: 510)
+    }
+
+    private func installationNotice(title: String, detail: String, blocked: Bool = false) -> some View {
+        let color = blocked ? Color.orange : WorkspaceView.tint
+        return HStack(alignment: .top, spacing: 10) {
+            (blocked ? TablerIcon.error : .information).view(size: 17)
+                .foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(language.text(title)).font(.callout.bold())
+                    .accessibilityAddTraits(.isHeader)
+                Text(detail).font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(11)
+        .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(color.opacity(0.26)).allowsHitTesting(false) }
     }
 
     private func row(_ name: String, status: DependencyStatus, service: Bool = false) -> some View {
@@ -109,7 +154,7 @@ struct DependencyHealthView: View {
                     }
                     .font(.callout).foregroundStyle(.secondary)
                 }
-                if let path = status.path {
+                if !model.setup, let path = status.path {
                     Text(path).font(.caption.monospaced()).foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }

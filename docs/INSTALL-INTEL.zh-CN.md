@@ -1,12 +1,12 @@
 # 在 Intel Mac 上安装 ezNTFS
 
-Intel 正式版支持 macOS 12.7 Monterey 或更新版本。先在「 → 关于本机」确认这台 Mac 显示的是 Intel 处理器。[下载 Intel 正式版](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.3/ezNTFS-0.5.3-x86_64-Monterey-Setup.zip)
+Intel 正式版支持 macOS 12.7 Monterey 或更新版本。先在「 → 关于本机」确认这台 Mac 显示的是 Intel 处理器。[下载 Intel 正式版](https://github.com/ixiehao/ezNTFS/releases/download/v0.5.4/ezNTFS-0.5.4-x86_64-Monterey-Setup.zip)
 
 ## 1. 打开安装引导
 
 如果正在使用移动硬盘，先关闭盘上的文件并安全弹出。解压下载的 ZIP，在访达中打开「Install ezNTFS」。Monterey 如果提示无法验证开发者，可在「系统偏好设置 → 安全性与隐私 → 通用」为这个安装引导点「仍要打开」，再按提示确认。
 
-## 2. 点「安装或修复依赖」
+## 2. 按提示安装依赖
 
 安装引导会检查 macFUSE、NTFS-3G 和挂载服务。缺少 macFUSE 时，会下载并验证 macFUSE 5.5.0，再打开官方图形安装器。官方来源连接不通时会自动尝试镜像；已经装好兼容版本时会跳过这一步。
 

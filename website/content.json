@@ -1,6 +1,6 @@
 {
-  "version": "0.5.3",
-  "lastModified": "2026-11-27",
+  "version": "0.5.4",
+  "lastModified": "2026-11-28",
   "minimumMacOS": "14",
   "minimumIntelMacOS": "12.7",
   "macFUSE": "5.5.0",
@@ -49,7 +49,7 @@
       "installTitle": "Install ezNTFS",
       "installSteps": [
         "Unzip the download for your Mac and open Install ezNTFS.",
-        "Choose Install or Repair Dependencies. The installer checks for macFUSE {fuse}, then guides you through the required approvals.",
+        "Follow the installation or upgrade prompts. The installer checks for macFUSE {fuse} and guides you through the required approvals.",
         "Open ezNTFS, connect your NTFS drive, and wait for Read-Write. You can also click Mount Read-Write."
       ],
       "macfuseLink": "Get macFUSE from the official release page",
@@ -139,7 +139,7 @@
       "installTitle": "安装 ezNTFS",
       "installSteps": [
         "下载适合这台 Mac 的版本，解压后打开「Install ezNTFS」。",
-        "点「安装或修复依赖」。安装器会检查 macFUSE {fuse}，并引导你完成所需授权。",
+        "按提示安装或升级。安装器会检查 macFUSE {fuse}，并引导你完成所需授权。",
         "打开 ezNTFS，插入 NTFS 硬盘，等待状态显示「可读写」。也可以手动点「挂载读写」。"
       ],
       "macfuseLink": "前往 macFUSE 官方发布页",
@@ -229,7 +229,7 @@
       "installTitle": "ezNTFS をインストール",
       "installSteps": [
         "Mac に合った版をダウンロードして解凍し、「Install ezNTFS」を開きます。",
-        "「依存コンポーネントをインストールまたは修復」を選びます。macFUSE {fuse} の確認後、必要な許可を案内します。",
+        "画面の案内に従ってインストールまたはアップグレードします。macFUSE {fuse} の確認後、必要な許可を案内します。",
         "ezNTFS を開いて NTFS ドライブを接続し、「読み書き可」と表示されるまで待ちます。手動でマウントすることもできます。"
       ],
       "macfuseLink": "macFUSE の公式リリースページを開く",
