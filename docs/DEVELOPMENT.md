@@ -22,13 +22,13 @@ PKG 默认按当前架构构建。可以为 App、系统服务、安装辅助程
 EZNTFS_ARCHITECTURE=x86_64 scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
 ```
 
-两个架构和不同的最低系统目标使用独立的构建缓存。安装器在写入系统目录前检查架构。Intel Monterey 实盘包使用以下命令构建，生成带 `Monterey-Mirrors` 后缀的独立产物。
+两个架构和不同的最低系统目标使用独立的构建缓存。安装器在写入系统目录前检查架构。Intel Monterey 实盘包使用以下命令构建，生成带 `Monterey` 后缀的 Intel 安装包。
 
 ```zsh
 EZNTFS_ARCHITECTURE=x86_64 EZNTFS_MONTEREY=1 scripts/package-installer.sh /path/to/ntfs-3g_ntfsprogs-2026.9.28.tgz
 ```
 
-Monterey 包使用 AppKit 窗口和菜单栏，以及 macOS 12 提供的 XPC C API。应用和挂载服务双向校验签名。首次连接已确认的外置 NTFS 卷时默认尝试读写挂载，各盘可单独关闭自动挂载。服务仍会核对设备与分区身份，拒绝抢占由其他驱动管理的卷，并正常弹出占用解除后的磁盘。实际支持范围须等待 Intel macOS 12.7 实机验证。
+Monterey 包使用 AppKit 窗口和菜单栏，以及 macOS 12 提供的 XPC C API。应用和挂载服务双向校验签名。首次连接已确认的外置 NTFS 卷时默认尝试读写挂载，各盘可单独关闭自动挂载。服务仍会核对设备与分区身份，拒绝抢占由其他驱动管理的卷，并正常弹出占用解除后的磁盘。Intel 正式版从 macOS 12.7 Monterey 起支持。
 
 实机安装时解压 `Setup.zip` 并打开 `Install ezNTFS.app`。跟随安装器完成管理员授权、macFUSE 扩展许可及必要的重启，再打开 ezNTFS。若系统拒绝挂载服务访问外置磁盘，可从应用打开「完全磁盘访问权限」并在访达显示挂载服务，授权后点「重试挂载」。验证请使用可写入测试文件的实体 NTFS 外接盘。
 

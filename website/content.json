@@ -182,7 +182,7 @@
       "stableChip": "Apple 芯片",
       "stableLabel": "正式版",
       "guideNote": "下方截图使用模拟的 NTFS 硬盘。",
-      "intelDownload": "下载 Intel 版",
+      "intelDownload": "下载 Intel 正式版",
       "intelGuide": "Intel Mac 图文安装教程"
     },
     "ja": {
@@ -272,7 +272,7 @@
       "stableChip": "Apple シリコン",
       "stableLabel": "正式版",
       "guideNote": "以下の画面にはデモ用の NTFS ドライブを使用しています。",
-      "intelDownload": "Intel 版をダウンロード",
+      "intelDownload": "Intel 正式版をダウンロード",
       "intelGuide": "Intel Mac インストールガイド（中国語）"
     }
   }

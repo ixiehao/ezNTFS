@@ -107,6 +107,8 @@ def render(lang, copy):
     ]
     steps = [step.format(fuse=data["macFUSE"]) for step in copy["installSteps"]]
     heading_first, heading_second = copy["heading"]
+    compatibility = (f"{copy['stableChip']} · macOS {data['minimumMacOS']}+ / "
+                     f"Intel Mac · macOS {data['minimumIntelMacOS']}+")
     text = {key: escape(value) for key, value in copy.items() if isinstance(value, str)}
     document = template.substitute(
         **{
@@ -118,6 +120,7 @@ def render(lang, copy):
             "screenshot_label": text["screenshotLabel"],
             "schema": json.dumps(schema, ensure_ascii=False).replace("<", "\\u003c"),
             "repository": REPO, "asset_key": asset_key, "version": version,
+            "compatibility": escape(compatibility),
             "requirements": text["requirements"].format(macos=data["minimumMacOS"]),
             "heading_first": escape(heading_first), "heading_second": escape(heading_second),
             "release_url": release, "download_url": download, "checksum_url": checksum,
@@ -141,7 +144,7 @@ def render(lang, copy):
         "", f'[{copy["intelGuide"]}]({intel_guide})',
         "", f'## {copy["workflowTitle"]}', "", copy["guideNote"], "",
         *workflow_markdown,
-        f'## {copy["installTitle"]}', "", copy["requirements"].format(macos=data["minimumMacOS"]),
+        f'## {copy["installTitle"]}', "", compatibility,
         "", *[f"{i}. {step}" for i, step in enumerate(steps, 1)], "",
         copy["macfuseOnce"].format(fuse=data["macFUSE"]),
         f'[{copy["macfuseLink"]}]({macfuse})', "",

@@ -46,6 +46,9 @@ try {
             );
             assert.equal(await page.locator(".languages [aria-current=page]").count(), 1);
             assert(await page.locator("h1").isVisible());
+            const compatibility = await page.locator(".hero .requirements").textContent();
+            assert.match(compatibility, /macOS 14\+/);
+            assert.match(compatibility, /Intel Mac · macOS 12\.7\+/);
             assert.equal(await page.locator(".workflow article").count(), 3);
             assert.equal(await page.locator(".installation li").count(), 3);
             await page.locator('.hero-actions a[href="#download"]').click();
